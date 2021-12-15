@@ -1,0 +1,70 @@
+name: "$(Date:yyMMdd).$(Rev:r)"
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+  branches:
+    include:
+    - develop
+    - test/*
+  tags:
+    include:
+    - '*'
+
+pool:
+  name: ubuntu20.04-gpu
+
+resources:
+  repositories:
+    - repository: pipelines-core
+      type: git
+      name: Infra/pipelines-core
+      ref: refs/heads/develop
+
+variables:
+  - name: CONTAINER_REGISTRY
+    value: 'docker.siadev.kr'
+  - name: REPOSITORY_NAME
+    value: 'P-CLS/clasymm'
+  - name: PROJECT_NAME
+    value: 'research'
+  - name: APP_NAME
+    value: 'clasymm'
+
+
+stages:
+- stage: build_stage
+  displayName: Build
+  variables:
+    # for container image build and push
+    - name: DOCKERFILE_PATH
+      value: '$(Build.SourcesDirectory)/Dockerfile'
+    - name: CONTAINER_CONTEXT_PATH
+      value: '$(Build.SourcesDirectory)'
+    - name: CONTAINER_REPOSITORY
+      value: '$(PROJECT_NAME)/$(APP_NAME)'
+  jobs:
+    - template: templates/jobs/v1beta/isort-black-flake8.yaml@pipelines-core
+    - job: image_build
+      displayName: test and build image
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+
+      - template: templates/steps/container-image/v1/login-registry.yaml@pipelines-core
+      - template: templates/steps/container-image/v1/tagging.yaml@pipelines-core
+      - template: templates/steps/container-image/v1/build-image.yaml@pipelines-core
+      - template: templates/steps/container-image/v1/push-image.yaml@pipelines-core
+
+      - task: Bash@3
+        displayName: tag develop and push an image
+        condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+        inputs:
+          targetType: inline
+          script: |
+            docker tag $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):$(CONTAINER_TAG) $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):develop
+            docker push $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):develop
+
+

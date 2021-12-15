@@ -4,6 +4,8 @@ instant_test_output
 inference_test_output
 ckpt
 work_dirs
+dist
+build
 segov.egg-info
 *.log
 

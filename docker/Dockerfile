@@ -10,13 +10,20 @@ RUN tar -xzvf gdal-2.4.1.tar.gz
 WORKDIR /libs/gdal-2.4.1/swig/python/
 RUN python3 setup.py build && python3 setup.py install
 
-COPY submodules/siavision/ /ardet/submodules/siavision
-RUN cd /ardet/submodules/siavision \
+# Install SIALibs.siavision
+COPY submodules/siavision/ /clasymm/submodules/siavision
+RUN cd /clasymm/submodules/siavision \
     && pip3 install .
 
-COPY submodules/dataset /ardet/submodules/dataset
-RUN cd /ardet/submodules/dataset \
+# Install SIALibs.dataset
+COPY submodules/dataset /clasymm/submodules/dataset
+RUN cd /clasymm/submodules/dataset \
     && pip3 install .
+
+# Install GEOCOCO
+COPY submodules/geococo/ /clasymm/submodules/geococo
+RUN cd /app/submodules/geococo/PythonAPI \
+ && python3 setup.py build_ext install
 
 RUN cd /libs \
     && git clone --depth 1 -b v1.3.16 https://github.com/open-mmlab/mmcv \

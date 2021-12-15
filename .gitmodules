@@ -4,3 +4,6 @@
 [submodule "submodules/siavision"]
 	path = submodules/siavision
 	url = https://si-analytics@dev.azure.com/si-analytics/SIALibs/_git/siavision
+[submodule "submodules/geococo"]
+	path = submodules/geococo
+    url = https://si-analytics@dev.azure.com/si-analytics/_git/GEO-COCO
