@@ -1,0 +1,43 @@
+# output dir
+output
+instant_test_output
+inference_test_output
+ckpt
+work_dirs
+segov.egg-info
+*.log
+
+*.jpg
+*.png
+*.txt
+
+# compilation and distribution
+__pycache__
+_ext
+*.pyc
+*.so
+*.DS_Store
+
+# pytorch/python/numpy formats
+*.pth
+*.pkl
+*.npy
+
+# ipython/jupyter notebooks
+*.ipynb
+**/.ipynb_checkpoints/
+
+# egg-info
+*.egg-info
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# Pycharm editor settings
+.idea
+# VSCode editor settings
+.vscode
+
