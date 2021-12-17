@@ -2,8 +2,7 @@ import os
 
 from setuptools import find_packages, setup
 
-install_requires = [
-]
+install_requires = []
 
 extra_requires = [
     "black==21.4b2",
@@ -23,4 +22,3 @@ setup(
     extra_requires=extra_requires,
     packages=[os.path.join(package_name, i) for i in find_packages(where=package_name)],
 )
-
