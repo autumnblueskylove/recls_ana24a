@@ -1,5 +1,7 @@
 from mmcls.datasets.builder import PIPELINES
+import random
 import numpy as np
+from PIL import Image
 from mmcls.datasets.pipelines.auto_augment import random_negative
 
 @PIPELINES.register_module()
@@ -46,4 +48,33 @@ class GaussianNoise:
         repr_str += f"std={self.std}, "
         repr_str += f"prob={self.prob})"
         return repr_str
+
+@PIPELINES.register_module()
+class RandomGaussianBlur:
+    """Customized RandomGaussianBlur Module
+
+    Args:
+        p (float): probability of the image being blurred. Default value is 0.5
+    """
+
+    def __init__(self, prob=0.5):
+        self.prob = prob
+
+    def __call__(self, img):
+        """
+        Args:
+            img (PIL Image): Image to be blurred.
+
+        Returns:
+            PIL Image: Randomly blurred image.
+        """
+        if np.random.rand() > self.prob:
+            return results
+
+        for key in results.get('img_fields', ['img']):
+            img = Image.fromarray(results[key])
+            img = img.filter(ImageFilter.GaussianBlur(radius=random.random()))
+            results[key] = img
+
+        return results
 
