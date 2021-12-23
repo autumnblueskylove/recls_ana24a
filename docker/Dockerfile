@@ -34,4 +34,4 @@ RUN pip3 install mmcls==0.18.0
 WORKDIR /clasymm
 
 COPY . /clasymm
-# RUN pip3 install .
+RUN python3 setup.py install

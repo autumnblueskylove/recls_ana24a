@@ -20,5 +20,5 @@ setup(
     author="SIA",
     install_requires=install_requires,
     extra_requires=extra_requires,
-    packages=[os.path.join(package_name, i) for i in find_packages(where=package_name)],
+    packages=find_packages(exclude=("configs", "submodules")),
 )
