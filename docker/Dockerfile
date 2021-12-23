@@ -22,7 +22,7 @@ RUN cd /clasymm/submodules/dataset \
 
 # Install GEOCOCO
 COPY submodules/geococo/ /clasymm/submodules/geococo
-RUN cd /app/submodules/geococo/PythonAPI \
+RUN cd /clasymm/submodules/geococo/PythonAPI \
  && python3 setup.py build_ext install
 
 RUN cd /libs \
