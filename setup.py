@@ -5,6 +5,7 @@ from setuptools import find_packages, setup
 install_requires = []
 
 extra_requires = [
+    "einops",
     "black==21.4b2",
     "flake8==3.9.2",
     "isort==5.8.0",
