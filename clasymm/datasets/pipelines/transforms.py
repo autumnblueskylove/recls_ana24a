@@ -1,8 +1,10 @@
-from mmcls.datasets.builder import PIPELINES
 import random
+
 import numpy as np
-from PIL import Image, ImageFilter
+from mmcls.datasets.builder import PIPELINES
 from mmcls.datasets.pipelines.auto_augment import random_negative
+from PIL import Image, ImageFilter
+
 
 @PIPELINES.register_module()
 class GaussianNoise:
@@ -36,7 +38,7 @@ class GaussianNoise:
         """
         if np.random.rand() > self.prob:
             return results
-        for key in results.get('img_fields', ['img']):
+        for key in results.get("img_fields", ["img"]):
             img = results[key]
             results[key] = self._add_noise_to_img(img, self.mean, self.std)
 
@@ -48,6 +50,7 @@ class GaussianNoise:
         repr_str += f"std={self.std}, "
         repr_str += f"prob={self.prob})"
         return repr_str
+
 
 @PIPELINES.register_module()
 class RandomGaussianBlur:
@@ -71,10 +74,9 @@ class RandomGaussianBlur:
         if np.random.rand() > self.prob:
             return results
 
-        for key in results.get('img_fields', ['img']):
+        for key in results.get("img_fields", ["img"]):
             img = Image.fromarray(results[key])
             img = img.filter(ImageFilter.GaussianBlur(radius=random.random()))
             results[key] = np.asarray(img)
 
         return results
-

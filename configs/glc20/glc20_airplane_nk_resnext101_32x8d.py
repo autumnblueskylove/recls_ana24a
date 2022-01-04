@@ -12,7 +12,14 @@ _deprecation_ = dict(
 optimizer = dict(type="SGD", lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
-lr_config = dict(policy="step", by_epoch=False, warmup='linear', warmup_iters=500,warmup_ratio=0.3333, step=[3000, 5000],)
+lr_config = dict(
+    policy="step",
+    by_epoch=False,
+    warmup="linear",
+    warmup_iters=500,
+    warmup_ratio=0.3333,
+    step=[3000, 5000],
+)
 runner = dict(type="IterBasedRunner", max_iters=8000)
 
 # checkpoint saving
@@ -32,7 +39,6 @@ log_level = "INFO"
 load_from = "https://download.openmmlab.com/mmclassification/v0/resnext/resnext101_32x8d_b32x8_imagenet_20210506-23a247d5.pth"
 resume_from = None
 workflow = [("train", 1)]
-
 
 
 # model settings

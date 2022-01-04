@@ -18,7 +18,7 @@ from siavision.models import (
 SIAVISION_ARCHITECTURE = [dla, resnet, resnest, rexnetv1, swin_transformer, effnet, beit, hrt, volo]
 
 
-@BACKBONES.register_module(force=True)
+@BACKBONES.register_module()
 class SiavisionModel(nn.Module):
     def __init__(
         self,

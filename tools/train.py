@@ -16,6 +16,7 @@ from mmcls.utils import collect_env, get_root_logger
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
 
+import clasymm
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a model")
