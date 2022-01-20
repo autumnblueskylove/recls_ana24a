@@ -82,7 +82,7 @@ def macro_accuracy(pred, target, topk=1, thrs=0.0):
     )
 
     # torch version is faster in most situations.
-    to_tensor = lambda x: torch.from_numpy(x) if isinstance(x, np.ndarray) else x
+    to_tensor = lambda x: torch.from_numpy(x) if isinstance(x, np.ndarray) else x  # noqa: E731
     pred = to_tensor(pred)
     target = to_tensor(target)
 

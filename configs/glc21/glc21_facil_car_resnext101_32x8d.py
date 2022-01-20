@@ -36,7 +36,7 @@ log_config = dict(
 
 dist_params = dict(backend="nccl")
 log_level = "INFO"
-load_from = "https://download.openmmlab.com/mmclassification/v0/resnext/resnext101_32x8d_b32x8_imagenet_20210506-23a247d5.pth"
+load_from = "https://download.openmmlab.com/mmclassification/v0/resnext/resnext101_32x8d_b32x8_imagenet_20210506-23a247d5.pth"  # noqa : 501
 resume_from = None
 workflow = [("train", 1)]
 

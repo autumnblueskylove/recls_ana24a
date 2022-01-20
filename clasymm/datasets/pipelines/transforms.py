@@ -2,7 +2,6 @@ import random
 
 import numpy as np
 from mmcls.datasets.builder import PIPELINES
-from mmcls.datasets.pipelines.auto_augment import random_negative
 from PIL import Image, ImageFilter
 
 

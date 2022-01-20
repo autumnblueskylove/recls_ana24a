@@ -32,7 +32,7 @@ def convert_head(model_key, model_weight, state_dict, converted_names):
     print(f"Convert {model_key} to {new_key}")
 
 
-def convert_block(model_key, model_weight, state_dict, converted_names):
+def convert_block(model_key, model_weight, state_dict, converted_names):  # noqa: C901
     split_keys = model_key.split(".")
     layer_id = int(split_keys[1])
     new_layer_id = 0

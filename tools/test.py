@@ -14,7 +14,7 @@ from mmcv import DictAction
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
-import clasymm
+import clasymm  # noqa: F401
 
 # TODO import `wrap_fp16_model` from mmcv and delete them from mmcls
 try:

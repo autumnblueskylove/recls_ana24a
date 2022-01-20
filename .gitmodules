@@ -1,6 +1,6 @@
 [submodule "submodules/dataset"]
 	path = submodules/dataset
-	url = https://si-analtycsi@dev.azure.com/si-analytics/SIALibs/_git/dataset
+	url = https://si-analytics@dev.azure.com/si-analytics/SIALibs/_git/dataset
 [submodule "submodules/siavision"]
 	path = submodules/siavision
 	url = https://si-analytics@dev.azure.com/si-analytics/SIALibs/_git/siavision
