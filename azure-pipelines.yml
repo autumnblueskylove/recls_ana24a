@@ -24,7 +24,7 @@ resources:
 
 variables:
   - name: CONTAINER_REGISTRY
-    value: 'docker.siadev.kr'
+    value: 'harbor.sia-service.kr'
   - name: REPOSITORY_NAME
     value: 'P-CLS/clasymm'
   - name: PROJECT_NAME

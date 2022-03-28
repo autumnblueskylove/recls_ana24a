@@ -11,7 +11,6 @@ segov.egg-info
 
 *.jpg
 *.png
-*.txt
 
 # compilation and distribution
 __pycache__

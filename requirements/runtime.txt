@@ -1,0 +1,6 @@
+-i https://pypi.sia-service.kr/simple/
+siavision>=0.1.2
+mmcls==0.18.0
+einops
+mlflow
+boto3
