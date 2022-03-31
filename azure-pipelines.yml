@@ -45,6 +45,15 @@ stages:
     - name: CONTAINER_REPOSITORY
       value: '$(PROJECT_NAME)/$(APP_NAME)'
   jobs:
+    - job: lint
+      displayName: Lint
+      steps:
+        - task: Bash@3
+          displayName: Lint
+          inputs:
+              targetType: inline
+              script: |
+                pip install click==8.0.1
     - template: templates/jobs/v1beta/isort-black-flake8.yaml@pipelines-core
     - job: image_build
       displayName: test and build image
