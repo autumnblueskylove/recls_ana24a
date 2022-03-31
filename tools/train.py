@@ -95,8 +95,10 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
+    if args.options is not None:
+        cfg.merge_from_dict(args.options)
+        run_id = args.options.get("run_id", None)
+        cfg.log_config.hooks[-1].run_id = run_id
     # set cudnn_benchmark
     if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
