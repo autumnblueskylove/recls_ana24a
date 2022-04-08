@@ -28,4 +28,4 @@ RUN cd /libs \
 WORKDIR /clasymm
 
 COPY . /clasymm
-RUN pip3 install .
+RUN pip3 install --no-cache-dir -e ".[optional]"
