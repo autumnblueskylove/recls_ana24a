@@ -53,8 +53,9 @@ stages:
           inputs:
               targetType: inline
               script: |
-                pip install click==8.0.1
-    - template: templates/jobs/v1beta/isort-black-flake8.yaml@pipelines-core
+                pip install pre-commit
+                pre-commit install
+                pre-commit run --all-files
     - job: image_build
       displayName: test and build image
       steps:
@@ -75,5 +76,3 @@ stages:
           script: |
             docker tag $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):$(CONTAINER_TAG) $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):develop
             docker push $(CONTAINER_REGISTRY)/$(CONTAINER_REPOSITORY):develop
-
-

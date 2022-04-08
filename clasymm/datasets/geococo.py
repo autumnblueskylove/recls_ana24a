@@ -3,20 +3,20 @@ import os
 from typing import List
 
 import numpy as np
+from clasymm.core.evaluation import macro_accuracy
+from pygeococotools.geococo import GeoCOCO
+
 from mmcls.core.evaluation import precision_recall_f1, support
 from mmcls.datasets.base_dataset import BaseDataset
 from mmcls.datasets.builder import DATASETS
 from mmcls.models.losses import accuracy
-from pygeococotools.geococo import GeoCOCO
-
-from clasymm.core.evaluation import macro_accuracy
 
 
 class ImageInfo:
     """class to  store image info, using slots will save memory than using
     dict."""
 
-    __slots__ = ["path", "gt_label"]
+    __slots__ = ['path', 'gt_label']
 
     def __init__(self, path, gt_label):
         self.path = path
@@ -53,10 +53,16 @@ class GeoCOCODataset(BaseDataset):
 
     CLASSES = None
 
-    def __init__(self, data_prefix, pipeline, classes=None, ann_file=None, test_mode=False):
+    def __init__(self,
+                 data_prefix,
+                 pipeline,
+                 classes=None,
+                 ann_file=None,
+                 test_mode=False):
         self.coco_api = GeoCOCO(os.path.join(data_prefix, ann_file))
-        super(GeoCOCODataset, self).__init__(data_prefix, pipeline, classes, ann_file, test_mode)
-        self.CLASSES = [i["name"] for i in self.coco_api.cats.values()]
+        super(GeoCOCODataset, self).__init__(data_prefix, pipeline, classes,
+                                             ann_file, test_mode)
+        self.CLASSES = [i['name'] for i in self.coco_api.cats.values()]
 
     def get_cat_ids(self, idx: int) -> List[int]:
         """Get category id by index.
@@ -75,25 +81,33 @@ class GeoCOCODataset(BaseDataset):
 
         data_infos = []
         for img_id in self.coco_api.imgs:
-            info = {"img_prefix": self.data_prefix}
-            info["img_info"] = {"filename": self.coco_api.loadImgs(img_id)[0]["file_name"]}
+            info = {'img_prefix': self.data_prefix}
+            info['img_info'] = {
+                'filename': self.coco_api.loadImgs(img_id)[0]['file_name']
+            }
             ann_ids = self.coco_api.getAnnIds(imgIds=img_id)
 
-            info["gt_label"] = np.array(
-                self.coco_api.loadAnns(ann_ids)[0]["properties"]["category_id"], dtype=np.int64
-            )
+            info['gt_label'] = np.array(self.coco_api.loadAnns(ann_ids)[0]
+                                        ['properties']['category_id'],
+                                        dtype=np.int64)
             data_infos.append(info)
 
         if len(data_infos) == 0:
-            msg = "Found no valid file in "
-            msg += f"{self.ann_file}. " if self.ann_file else f"{self.data_prefix}. "
-            msg += "Supported extensions are: " + ", ".join(self.IMG_EXTENSIONS)
+            msg = 'Found no valid file in '
+            msg += f'{self.ann_file}. ' if self.ann_file else f'{self.data_prefix}. '
+            msg += 'Supported extensions are: ' + ', '.join(
+                self.IMG_EXTENSIONS)
             raise RuntimeError(msg)
 
         return data_infos
 
-    def evaluate(self, results, metric="accuracy", metric_options=None, logger=None):
+    def evaluate(self,
+                 results,
+                 metric='accuracy',
+                 metric_options=None,
+                 logger=None):
         """Evaluate the dataset.
+
         Args:
             results (list): Testing results of the dataset.
             metric (str | list[str]): Metrics to be evaluated.
@@ -107,30 +121,32 @@ class GeoCOCODataset(BaseDataset):
             dict: evaluation results
         """
         if metric_options is None:
-            metric_options = {"topk": (1, 5)}
+            metric_options = {'topk': (1, 5)}
         if isinstance(metric, str):
             metrics = [metric]
         else:
             metrics = metric
-        allowed_metrics = ["accuracy", "precision", "recall", "f1_score", "support"]
+        allowed_metrics = [
+            'accuracy', 'precision', 'recall', 'f1_score', 'support'
+        ]
         eval_results = {}
         results = np.vstack(results)
         gt_labels = self.get_gt_labels()
         num_imgs = len(results)
         assert len(gt_labels) == num_imgs, (
-            "dataset testing results should " "be of the same length as gt_labels."
-        )
+            'dataset testing results should '
+            'be of the same length as gt_labels.')
 
         invalid_metrics = set(metrics) - set(allowed_metrics)
         if len(invalid_metrics) != 0:
-            raise ValueError(f"metric {invalid_metrics} is not supported.")
+            raise ValueError(f'metric {invalid_metrics} is not supported.')
 
-        topk = metric_options.get("topk", (1, 5))
-        thrs = metric_options.get("thrs")
-        average_mode = metric_options.get("average_mode", "macro")
+        topk = metric_options.get('topk', (1, 5))
+        thrs = metric_options.get('thrs')
+        average_mode = metric_options.get('average_mode', 'macro')
 
-        if "accuracy" in metrics:
-            if average_mode == "macro":
+        if 'accuracy' in metrics:
+            if average_mode == 'macro':
                 accuracy_metric = macro_accuracy
             else:
                 accuracy_metric = accuracy
@@ -140,37 +156,45 @@ class GeoCOCODataset(BaseDataset):
             else:
                 acc = accuracy_metric(results, gt_labels, topk=topk)
             if isinstance(topk, tuple):
-                eval_results_ = {f"{average_mode}_accuracy_top-{k}": a for k, a in zip(topk, acc)}
+                eval_results_ = {
+                    f'{average_mode}_accuracy_top-{k}': a
+                    for k, a in zip(topk, acc)
+                }
             else:
-                eval_results_ = {f"{average_mode}_accuracy": acc}
+                eval_results_ = {f'{average_mode}_accuracy': acc}
             if isinstance(thrs, tuple):
                 for key, values in eval_results_.items():
-                    eval_results.update(
-                        {f"{key}_thr_{thr:.2f}": value.item() for thr, value in zip(thrs, values)}
-                    )
+                    eval_results.update({
+                        f'{key}_thr_{thr:.2f}': value.item()
+                        for thr, value in zip(thrs, values)
+                    })
             else:
-                eval_results.update({k: v.item() for k, v in eval_results_.items()})
+                eval_results.update(
+                    {k: v.item()
+                     for k, v in eval_results_.items()})
 
-        if "support" in metrics:
-            support_value = support(results, gt_labels, average_mode=average_mode)
-            eval_results["support"] = support_value
+        if 'support' in metrics:
+            support_value = support(results,
+                                    gt_labels,
+                                    average_mode=average_mode)
+            eval_results['support'] = support_value
 
-        precision_recall_f1_keys = ["precision", "recall", "f1_score"]
+        precision_recall_f1_keys = ['precision', 'recall', 'f1_score']
         if len(set(metrics) & set(precision_recall_f1_keys)) != 0:
             if thrs is not None:
                 precision_recall_f1_values = precision_recall_f1(
-                    results, gt_labels, average_mode=average_mode, thrs=thrs
-                )
+                    results, gt_labels, average_mode=average_mode, thrs=thrs)
             else:
                 precision_recall_f1_values = precision_recall_f1(
-                    results, gt_labels, average_mode=average_mode
-                )
-            for key, values in zip(precision_recall_f1_keys, precision_recall_f1_values):
+                    results, gt_labels, average_mode=average_mode)
+            for key, values in zip(precision_recall_f1_keys,
+                                   precision_recall_f1_values):
                 if key in metrics:
                     if isinstance(thrs, tuple):
-                        eval_results.update(
-                            {f"{key}_thr_{thr:.2f}": value for thr, value in zip(thrs, values)}
-                        )
+                        eval_results.update({
+                            f'{key}_thr_{thr:.2f}': value
+                            for thr, value in zip(thrs, values)
+                        })
                     else:
                         eval_results[key] = values
 

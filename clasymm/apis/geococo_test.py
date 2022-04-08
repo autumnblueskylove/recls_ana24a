@@ -10,13 +10,13 @@ from mmcv.runner import get_dist_info
 def collect_results(result_part):
 
     rank, world_size = get_dist_info()
-    tmpdir = ".dist_test"
+    tmpdir = '.dist_test'
 
     if rank == 0:
         os.makedirs(tmpdir, exist_ok=True)
 
     dist.barrier()
-    mmcv.dump(result_part, os.path.join(tmpdir, f"part_{rank}.pkl"))
+    mmcv.dump(result_part, os.path.join(tmpdir, f'part_{rank}.pkl'))
     dist.barrier()
 
     if rank != 0:
@@ -24,13 +24,16 @@ def collect_results(result_part):
     else:
         part_list = list()
         for i in range(world_size):
-            part_file = os.path.join(tmpdir, f"part_{i}.pkl")
+            part_file = os.path.join(tmpdir, f'part_{i}.pkl')
             part_result = mmcv.load(part_file)
             part_list.extend(part_result)
         return part_list
 
 
-def inference_geococo_model(model, data_loader, tmpdir=None, gpu_collect=False):
+def inference_geococo_model(model,
+                            data_loader,
+                            tmpdir=None,
+                            gpu_collect=False):
 
     model.eval()
     results = []
@@ -38,14 +41,13 @@ def inference_geococo_model(model, data_loader, tmpdir=None, gpu_collect=False):
     rank, world_size = get_dist_info()
     if rank == 0:
         # Check if tmpdir is valid for cpu_collect
-        if (not gpu_collect) and (tmpdir is not None and os.path.exists(tmpdir)):
-            raise OSError(
-                (
-                    f"The tmpdir {tmpdir} already exists.",
-                    " Since tmpdir will be deleted after testing,",
-                    " please make sure you specify an empty one.",
-                )
-            )
+        if (not gpu_collect) and (tmpdir is not None
+                                  and os.path.exists(tmpdir)):
+            raise OSError((
+                f'The tmpdir {tmpdir} already exists.',
+                ' Since tmpdir will be deleted after testing,',
+                ' please make sure you specify an empty one.',
+            ))
         prog_bar = mmcv.ProgressBar(len(dataset))
     time.sleep(2)
     dist.barrier()
@@ -55,11 +57,13 @@ def inference_geococo_model(model, data_loader, tmpdir=None, gpu_collect=False):
     gt_labels = list()
 
     for i, data in enumerate(data_loader):
-        img_metas = data["img_metas"].data[0]
-        filename = [img_meta["filename"] for img_meta in img_metas]
-        gt_label = list(data["gt_label"].cpu().numpy())
+        img_metas = data['img_metas'].data[0]
+        filename = [img_meta['filename'] for img_meta in img_metas]
+        gt_label = list(data['gt_label'].cpu().numpy())
         with torch.no_grad():
-            result = model(return_loss=False, img=data["img"], img_metas=data["img_metas"])
+            result = model(return_loss=False,
+                           img=data['img'],
+                           img_metas=data['img_metas'])
 
         if isinstance(result, list):
             results.extend(result)
@@ -77,7 +81,7 @@ def inference_geococo_model(model, data_loader, tmpdir=None, gpu_collect=False):
             gt_labels.append(gt_label)
 
         if rank == 0:
-            batch_size = data["img"].size(0)
+            batch_size = data['img'].size(0)
             for _ in range(batch_size * world_size):
                 prog_bar.update()
 

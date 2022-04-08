@@ -5,7 +5,8 @@ import shutil
 import mmcv
 from mmcv.runner import RUNNERS
 from mmcv.runner.checkpoint import save_checkpoint
-from mmcv.runner.epoch_based_runner import EpochBasedRunner as _EpochBasedRunner
+from mmcv.runner.epoch_based_runner import \
+    EpochBasedRunner as _EpochBasedRunner
 
 
 @RUNNERS.register_module(force=True)
@@ -13,12 +14,13 @@ class EpochBasedRunner(_EpochBasedRunner):
     def save_checkpoint(
         self,
         out_dir,
-        filename_tmpl="epoch_{}.pth",
+        filename_tmpl='epoch_{}.pth',
         save_optimizer=True,
         meta=None,
         create_symlink=True,
     ):
         """Save the checkpoint.
+
         Args:
             out_dir (str): The directory that checkpoints are saved.
             filename_tmpl (str, optional): The checkpoint filename template,
@@ -35,7 +37,8 @@ class EpochBasedRunner(_EpochBasedRunner):
         if meta is None:
             meta = {}
         elif not isinstance(meta, dict):
-            raise TypeError(f"meta should be a dict or None, but got {type(meta)}")
+            raise TypeError(
+                f'meta should be a dict or None, but got {type(meta)}')
         if self.meta is not None:
             meta.update(self.meta)
             # Note: meta.update(self.meta) should be done before
@@ -51,8 +54,8 @@ class EpochBasedRunner(_EpochBasedRunner):
         # in some environments, `os.symlink` is not supported, you may need to
         # set `create_symlink` to False
         if create_symlink:
-            dst_file = osp.join(out_dir, "model_final.pth")
-            if platform.system() != "Windows":
+            dst_file = osp.join(out_dir, 'model_final.pth')
+            if platform.system() != 'Windows':
                 mmcv.symlink(filename, dst_file)
             else:
                 shutil.copy(filepath, dst_file)

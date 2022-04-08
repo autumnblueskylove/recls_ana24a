@@ -1,9 +1,9 @@
 # model settings
 model = dict(
-    type="ImageClassifier",
+    type='ImageClassifier',
     backbone=dict(
-        type="TNT",
-        arch="s",
+        type='TNT',
+        arch='s',
         img_size=224,
         patch_size=16,
         in_channels=3,
@@ -15,17 +15,19 @@ model = dict(
         first_stride=4,
         num_fcs=2,
         init_cfg=[
-            dict(type="TruncNormal", layer="Linear", std=0.02),
-            dict(type="Constant", layer="LayerNorm", val=1.0, bias=0.0),
+            dict(type='TruncNormal', layer='Linear', std=0.02),
+            dict(type='Constant', layer='LayerNorm', val=1.0, bias=0.0),
         ],
     ),
     neck=None,
     head=dict(
-        type="LinearClsHead",
+        type='LinearClsHead',
         num_classes=1000,
         in_channels=384,
-        loss=dict(type="LabelSmoothLoss", label_smooth_val=0.1, mode="original"),
+        loss=dict(type='LabelSmoothLoss',
+                  label_smooth_val=0.1,
+                  mode='original'),
         topk=(1, 5),
-        init_cfg=dict(type="TruncNormal", layer="Linear", std=0.02),
+        init_cfg=dict(type='TruncNormal', layer='Linear', std=0.02),
     ),
 )

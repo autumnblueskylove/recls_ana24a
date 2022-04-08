@@ -1,36 +1,40 @@
 repos:
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.6.3
-    hooks:
-      - id: isort
-        name: isort (python)
-        args:
-          - --line-length=88
-
-  - repo: https://github.com/psf/black
-    rev: stable
-    hooks:
-      - id: black
-        args:
-          - --line-length=100
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+  - repo: https://gitlab.com/pycqa/flake8.git
+    rev: 3.7.9
     hooks:
       - id: flake8
-        args:
-          - "--max-line-length=120"
-          - "--ignore=E203,W503"
-          - "--per-file-ignores=__init__.py: F401"
-
-  - repo: local
+  - repo: https://github.com/asottile/seed-isort-config
+    rev: v2.1.0
     hooks:
-      - id: unit test
-        name: unit test
-        entry: python3 -m unittest -v tests
-        language: system
-        types: [python3]
-
-
-
+      - id: seed-isort-config
+  - repo: https://github.com/timothycrosley/isort
+    rev: 4.3.21
+    hooks:
+      - id: isort
+  - repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.29.0
+    hooks:
+      - id: yapf
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: double-quote-string-fixer
+      - id: check-merge-conflict
+      - id: fix-encoding-pragma
+        args: ["--remove"]
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+      - id: codespell
+        args: ["--skip", "*.ipynb,tools/data/hvu/label_map.json,configs/restorers/srresnet_srgan/*.md", "-L", "formating,te,nd,thre,Gool,gool"]
+  - repo: https://github.com/myint/docformatter
+    rev: v1.3.1
+    hooks:
+      - id: docformatter
+        args: ["--in-place", "--wrap-descriptions", "79"]

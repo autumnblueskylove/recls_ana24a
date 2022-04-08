@@ -1,9 +1,8 @@
 import os
 
 import numpy as np
-from tqdm import tqdm
-
 from clasymm.datasets.geococo import GeoCOCODataset
+from tqdm import tqdm
 
 
 class EvalMetrics(GeoCOCODataset):
@@ -12,17 +11,22 @@ class EvalMetrics(GeoCOCODataset):
         infos,
         topk,
         add_key,
-        metric=["accuracy", "precision", "recall", "f1_score", "support"],
+        metric=['accuracy', 'precision', 'recall', 'f1_score', 'support'],
     ):
         self.data_infos = infos
-        self.logits = [info["logit"] for info in self.data_infos]
+        self.logits = [info['logit'] for info in self.data_infos]
         self.topk = dict(topk=(1, topk))
         self.metric = metric
         self.add_key = add_key
 
     def get_metric(self):
-        metric = self.evaluate(self.logits, metric_options=self.topk, metric=self.metric)
-        add_metric = {os.path.join(self.add_key, k): v for k, v in metric.items()}
+        metric = self.evaluate(self.logits,
+                               metric_options=self.topk,
+                               metric=self.metric)
+        add_metric = {
+            os.path.join(self.add_key, k): v
+            for k, v in metric.items()
+        }
         return add_metric
 
 
@@ -40,7 +44,7 @@ def filter_by_key(keys, value):
 
 def evaluate_per_class(results):
 
-    logits = np.array([result["result"] for result in results])
+    logits = np.array([result['result'] for result in results])
     assert len(logits.shape) == 2
     num_classes = logits.shape[1]
     topk = get_topk(num_classes)
@@ -48,16 +52,14 @@ def evaluate_per_class(results):
     class_map = {str(i): list() for i in range(num_classes)}
 
     for result in tqdm(results):
-        logit = result["result"]
-        label = result["label"]
+        logit = result['result']
+        label = result['label']
         include, key = filter_by_key(list(class_map.keys()), str(label))
         if include:
-            class_map[key].append(
-                dict(
-                    gt_label=label,
-                    logit=logit,
-                )
-            )
+            class_map[key].append(dict(
+                gt_label=label,
+                logit=logit,
+            ))
 
     metrics = list()
     for key in class_map.keys():
@@ -66,7 +68,7 @@ def evaluate_per_class(results):
         metric = EvalMetrics(
             infos=class_map[key],
             topk=topk,
-            add_key=os.path.join("class", key),
+            add_key=os.path.join('class', key),
         ).get_metric()
         metrics.append(metric)
     return metrics
@@ -74,42 +76,38 @@ def evaluate_per_class(results):
 
 def evaluate_per_sensor(results):
 
-    logits = np.array([result["result"] for result in results])
+    logits = np.array([result['result'] for result in results])
     assert len(logits.shape) == 2
     num_classes = logits.shape[1]
     topk = get_topk(num_classes)
 
     sensor_map = {
-        "K3A": list(),
-        "K3I": list(),
-        "WV1": list(),
-        "WV2": list(),
-        "WV3": list(),
+        'K3A': list(),
+        'K3I': list(),
+        'WV1': list(),
+        'WV2': list(),
+        'WV3': list(),
     }
 
     etc_map = {
-        "etc": list(),
+        'etc': list(),
     }
 
     for result in tqdm(results):
-        filename = result["filename"]
-        logit = result["result"]
-        label = result["label"]
+        filename = result['filename']
+        logit = result['result']
+        label = result['label']
         include, key = filter_by_key(list(sensor_map.keys()), filename)
         if include:
-            sensor_map[key].append(
-                dict(
-                    gt_label=label,
-                    logit=logit,
-                )
-            )
+            sensor_map[key].append(dict(
+                gt_label=label,
+                logit=logit,
+            ))
         else:
-            etc_map["etc"].append(
-                dict(
-                    gt_label=label,
-                    logit=logit,
-                )
-            )
+            etc_map['etc'].append(dict(
+                gt_label=label,
+                logit=logit,
+            ))
 
     metrics = list()
     for key in sensor_map.keys():
@@ -118,7 +116,7 @@ def evaluate_per_sensor(results):
         metric = EvalMetrics(
             infos=sensor_map[key],
             topk=topk,
-            add_key=os.path.join("sensor", key),
+            add_key=os.path.join('sensor', key),
         ).get_metric()
         metrics.append(metric)
 
@@ -128,7 +126,7 @@ def evaluate_per_sensor(results):
         metric = EvalMetrics(
             infos=etc_map[key],
             topk=topk,
-            add_key=os.path.join("sensor", key),
+            add_key=os.path.join('sensor', key),
         ).get_metric()
         metrics.append(metric)
 

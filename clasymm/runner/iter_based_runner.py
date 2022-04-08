@@ -12,18 +12,19 @@ from mmcv.runner.iter_based_runner import IterBasedRunner as _IterBasedRunner
 class IterBasedRunner(_IterBasedRunner):
     @property
     def max_epochs(self):
-        """Return dummy data for ProfilerHook"""
+        """Return dummy data for ProfilerHook."""
         return -1
 
     def save_checkpoint(
         self,
         out_dir,
-        filename_tmpl="iter_{}.pth",
+        filename_tmpl='iter_{}.pth',
         meta=None,
         save_optimizer=True,
         create_symlink=True,
     ):
         """Save checkpoint to file.
+
         Args:
             out_dir (str): Directory to save checkpoint files.
             filename_tmpl (str, optional): Checkpoint file template.
@@ -38,7 +39,8 @@ class IterBasedRunner(_IterBasedRunner):
         if meta is None:
             meta = {}
         elif not isinstance(meta, dict):
-            raise TypeError(f"meta should be a dict or None, but got {type(meta)}")
+            raise TypeError(
+                f'meta should be a dict or None, but got {type(meta)}')
         if self.meta is not None:
             meta.update(self.meta)
             # Note: meta.update(self.meta) should be done before
@@ -54,8 +56,8 @@ class IterBasedRunner(_IterBasedRunner):
         # in some environments, `os.symlink` is not supported, you may need to
         # set `create_symlink` to False
         if create_symlink:
-            dst_file = osp.join(out_dir, "model_final.pth")
-            if platform.system() != "Windows":
+            dst_file = osp.join(out_dir, 'model_final.pth')
+            if platform.system() != 'Windows':
                 mmcv.symlink(filename, dst_file)
             else:
                 shutil.copy(filepath, dst_file)

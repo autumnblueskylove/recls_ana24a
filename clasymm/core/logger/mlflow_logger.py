@@ -30,7 +30,7 @@ class MlflowLoggerHook(LoggerHook):
             tags (dict of str: str, optional): Tags for the current run.
                 Default None.
                 If not None, set tags for the current run.
-            log_model (bool, optional): Wheter to log an MLflow artifact.
+            log_model (bool, optional): Whether to log an MLflow artifact.
                 Default True.
                 If True, log runner.model as an MLflow artifact
                 for the current run.
@@ -42,7 +42,8 @@ class MlflowLoggerHook(LoggerHook):
         .. _MLflow:
             https://www.mlflow.org/docs/latest/index.html
         """
-        super(MlflowLoggerHook, self).__init__(interval, ignore_last, reset_flag, by_epoch)
+        super(MlflowLoggerHook, self).__init__(interval, ignore_last,
+                                               reset_flag, by_epoch)
         self.import_mlflow()
         self.exp_name = exp_name
         self.run_name = run_name
@@ -51,14 +52,15 @@ class MlflowLoggerHook(LoggerHook):
         self.run_id = run_id
 
     def _has_tracking_uri(self):
-        return "file://" not in self.mlflow.get_tracking_uri()
+        return 'file://' not in self.mlflow.get_tracking_uri()
 
     def import_mlflow(self):
         try:
             import mlflow
             import mlflow.pytorch as mlflow_pytorch
         except ImportError:
-            raise ImportError('Please run "pip install mlflow" to install mlflow')
+            raise ImportError(
+                'Please run "pip install mlflow" to install mlflow')
         self.mlflow = mlflow
         self.mlflow_pytorch = mlflow_pytorch
 
@@ -75,9 +77,8 @@ class MlflowLoggerHook(LoggerHook):
                 self.mlflow.set_experiment(self.exp_name)
             if self.tags is not None:
                 self.mlflow.set_tags(self.tags)
-            self.mlflow.start_run(
-                run_name=self.exp_name if self.run_name is None else self.run_name
-            )
+            self.mlflow.start_run(run_name=self.exp_name
+                                  if self.run_name is None else self.run_name)
 
     @master_only
     def log(self, runner):
@@ -90,17 +91,17 @@ class MlflowLoggerHook(LoggerHook):
                     break
                 except Exception as e:
                     print(e)
-                    print(f"Retrying ... : {i}")
+                    print(f'Retrying ... : {i}')
 
     @master_only
     def after_run(self, runner):
         if not bool(runner.work_dir) or not self._has_tracking_uri():
             return
 
-        artifact_lists = ["model_config.py", "model_final.pth"]
+        artifact_lists = ['model_config.py', 'model_final.pth']
         for artifact_list in artifact_lists:
-            self.mlflow.log_artifact(
-                os.path.join(runner.work_dir, artifact_list), artifact_path="checkpoint"
-            )
+            self.mlflow.log_artifact(os.path.join(runner.work_dir,
+                                                  artifact_list),
+                                     artifact_path='checkpoint')
 
         self.mlflow.end_run()

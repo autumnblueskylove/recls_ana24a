@@ -5,14 +5,15 @@ import numpy as np
 import torch
 
 
-def macro_accuracy_torch(pred, target, topk=(1,), thrs=0.0):
+def macro_accuracy_torch(pred, target, topk=(1, ), thrs=0.0):
     if isinstance(thrs, Number):
-        thrs = (thrs,)
+        thrs = (thrs, )
         res_single = True
     elif isinstance(thrs, tuple):
         res_single = False
     else:
-        raise TypeError(f"thrs should be a number or tuple, but got {type(thrs)}.")
+        raise TypeError(
+            f'thrs should be a number or tuple, but got {type(thrs)}.')
 
     maxk = max(topk)
     num_classes = pred.size(1)
@@ -36,11 +37,13 @@ def macro_accuracy_torch(pred, target, topk=(1,), thrs=0.0):
                 if num == 0:
                     continue
 
-                correct = pred_class_label.eq(class_target.view(1, -1).expand_as(pred_class_label))
+                correct = pred_class_label.eq(
+                    class_target.view(1, -1).expand_as(pred_class_label))
 
                 # Only prediction values larger than thr are counted as correct
                 _correct = correct & (pred_class_score.t() > thr)
-                correct_k = _correct[:k].reshape(-1).float().sum(0, keepdim=True)
+                correct_k = _correct[:k].reshape(-1).float().sum(0,
+                                                                 keepdim=True)
                 res_class.append((correct_k.mul_(100.0 / num)))
             res_thr.append(sum(res_class) / num_classes)
         if res_single:
@@ -69,20 +72,25 @@ def macro_accuracy(pred, target, topk=1, thrs=0.0):
     """
     assert isinstance(topk, (int, tuple))
     if isinstance(topk, int):
-        topk = (topk,)
+        topk = (topk, )
         return_single = True
     else:
         return_single = False
 
-    assert isinstance(pred, (torch.Tensor, np.ndarray)), (
-        f"The pred should be torch.Tensor or np.ndarray " f"instead of {type(pred)}."
-    )
-    assert isinstance(target, (torch.Tensor, np.ndarray)), (
-        f"The target should be torch.Tensor or np.ndarray " f"instead of {type(target)}."
-    )
+    assert isinstance(
+        pred, (torch.Tensor,
+               np.ndarray)), (f'The pred should be torch.Tensor or np.ndarray '
+                              f'instead of {type(pred)}.')
+    assert isinstance(
+        target,
+        (torch.Tensor,
+         np.ndarray)), (f'The target should be torch.Tensor or np.ndarray '
+                        f'instead of {type(target)}.')
 
     # torch version is faster in most situations.
-    to_tensor = lambda x: torch.from_numpy(x) if isinstance(x, np.ndarray) else x  # noqa: E731
+    def to_tensor(x):
+        return torch.from_numpy(x) if isinstance(x, np.ndarray) else x
+
     pred = to_tensor(pred)
     target = to_tensor(target)
 
