@@ -4,6 +4,46 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 from mmcls.datasets.builder import PIPELINES
+from .transform_utils import stretch_image
+
+
+@PIPELINES.register_module()
+class RandomStretch:
+    def __init__(self,
+                 min_percentile_range=(0.0, 3.0),
+                 max_percentile_range=(97.0, 100.0),
+                 new_max=255.0):
+
+        assert isinstance(min_percentile_range, tuple)
+        assert len(min_percentile_range) == 2
+        assert isinstance(max_percentile_range, tuple)
+        assert len(max_percentile_range) == 2
+        assert isinstance(new_max, float)
+
+        self.min_percentile_range = min_percentile_range
+        self.max_percentile_range = max_percentile_range
+        self.new_max = new_max
+
+    def __call__(self, results):
+        min_percentile = np.random.uniform(self.min_percentile_range[0],
+                                           self.min_percentile_range[1])
+        max_percentile = np.random.uniform(self.max_percentile_range[0],
+                                           self.max_percentile_range[1])
+        for key in results.get('img_fields', ['img']):
+            results[key] = stretch_image(
+                results[key],
+                new_max=self.new_max,
+                min_percentile=min_percentile,
+                max_percentile=max_percentile,
+            ).astype('uint8')
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(min_percentile_range={self.min_percentile_range}, '
+        repr_str += f'max_percentile_range={self.max_percentile_range}, '
+        repr_str += f'new_max={self.new_max})'
+        return repr_str
 
 
 @PIPELINES.register_module()
