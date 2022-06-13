@@ -1,4 +1,5 @@
 -i https://pypi.sia-service.kr/simple/
 mmray==0.0.22
+psycopg2-binary
 pymongo
 pytest
