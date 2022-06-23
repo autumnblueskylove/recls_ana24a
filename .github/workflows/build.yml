@@ -1,21 +1,16 @@
-name: Build & Push Docker Image CI
+name: Build & Push Docker Image
 
 on:
   push:
     branches:
-      - develop
-      - test/*
+      - 'develop'
+      - 'test/*'
     tags:
-      - v*.*.*
+      - '**'
 
-  pull_request:
-    paths-ignore:
-      - ".dev_scripts/**"
-      - ".github/**.md"
-      - "demo/**"
-      - "docker/**"
-      - "tools/**"
-      - "README.md"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   DOCKERFILE_PATH: "Dockerfile"
@@ -24,24 +19,8 @@ env:
   PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
 
 jobs:
-  build_cuda_test:
-    if: github.event_name == 'pull_request'
-    runs-on: ["self-hosted", "linux", "docker", "ubuntu20.04"]
-    timeout-minutes: 120
-    steps:
-    - name: checkout
-      uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and install
-      run: |
-          pip3 install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-          pip3 install mmcv-full==1.4.7 -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.9.0/index.html
-          pip3 install .[optional]
 
   build_docker:
-    needs: build_cuda_test
-    if: ${{ github.ref == 'refs/heads/develop' }} || startsWith(github.event.ref, 'refs/tags')
     runs-on: ["self-hosted", "linux", "docker", "ubuntu20.04"]
     timeout-minutes: 120
     steps:
