@@ -17,3 +17,12 @@ def test_random_stretch():
     )
     transforms_module = build_from_cfg(transforms, PIPELINES)
     transforms_module(results)
+
+
+def test_identity():
+
+    results = {'img': np.ones((512, 512, 3))}
+
+    transform = dict(type='Identity')
+    transform_module = build_from_cfg(transform, PIPELINES)
+    assert results == transform_module(results)

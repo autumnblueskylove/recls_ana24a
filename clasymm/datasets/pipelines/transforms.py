@@ -121,3 +121,18 @@ class RandomGaussianBlur:
             results[key] = np.asarray(img)
 
         return results
+
+
+@PIPELINES.register_module()
+class Identity:
+    """Placeholder pipeline."""
+    def __call__(self, results):
+        """
+        Args:
+            img (PIL Image): Input image.
+
+        Returns:
+            PIL Image: Output image.
+        """
+
+        return results
