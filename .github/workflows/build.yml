@@ -5,8 +5,8 @@ on:
     branches:
       - develop
       - test/*
-     tags:
-       - v*.*.* 
+    tags:
+      - v*.*.* 
   
   pull_request:
     paths-ignore:
