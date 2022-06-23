@@ -8,6 +8,15 @@ on:
     tags:
       - '**'
 
+  pull_request:
+    paths-ignore:
+      - ".dev_scripts/**"
+      - ".github/**.md"
+      - "demo/**"
+      - "docker/**"
+      - "tools/**"
+      - "README.md"
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
