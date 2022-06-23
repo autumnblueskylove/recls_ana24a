@@ -6,8 +6,8 @@ on:
       - develop
       - test/*
     tags:
-      - v*.*.* 
-  
+      - v*.*.*
+
   pull_request:
     paths-ignore:
       - ".dev_scripts/**"
