@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKERFILE_PATH: "Dockerfile"
+  DOCKERFILE_PATH: "docker/Dockerfile"
   PROJECT_NAME: research
   APP_NAME: clasymm
   PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
