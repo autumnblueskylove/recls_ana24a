@@ -3,6 +3,7 @@ try:
     IMPORT_MONGO = True
 except ImportError:
     IMPORT_MONGO = False
+    MongoClient = object
 from typing import List, Union
 
 from tqdm import tqdm
