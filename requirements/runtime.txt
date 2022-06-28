@@ -2,7 +2,7 @@
 boto3
 einops
 mlflow
-mmcls==0.18.0
+mmcls==0.23.1
 pygeococotools>=1.1.1
 sialibs-dataset
 siavision>=0.1.2

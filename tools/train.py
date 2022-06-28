@@ -16,7 +16,7 @@ from mmcls import __version__
 from mmcls.apis import set_random_seed, train_model
 from mmcls.datasets import build_dataset
 from mmcls.models import build_classifier
-from mmcls.utils import collect_env, get_root_logger
+from mmcls.utils import collect_env, get_root_logger, setup_multi_processes
 
 
 def parse_args():
@@ -102,6 +102,10 @@ def main():
         cfg.merge_from_dict(args.options)
         run_id = args.options.get('run_id', None)
         cfg.log_config.hooks[-1].run_id = run_id
+
+    # set multi-process settings
+    setup_multi_processes(cfg)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True

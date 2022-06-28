@@ -42,10 +42,10 @@ class DataPlatformReader(object):
     def get_class_idx(self, name):
         class_idx = next(
             (item['id']
-             for item in self.categories if item['name'] == str(name)),
+             for item in self.categories if str(item['name']) == str(name)),
             -1,
         )
-        assert class_idx != -1
+        assert class_idx != -1, f'{name} does not have an index in categories.'
         return class_idx
 
     def make_dataset(self):

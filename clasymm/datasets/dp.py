@@ -1,3 +1,6 @@
+import csv
+import os
+
 import numpy as np
 from clasymm.datasets.api_wrappers import DataPlatformReader
 
@@ -19,10 +22,16 @@ class DataPlatformDataset(MongoDataset):
                  port=None,
                  user=None,
                  password=None):
+        assert isinstance(object_list, list) or os.path.isfile(object_list)
 
         self.pipeline = Compose(pipeline)
         self.dbname = dbname
         self.categories = categories
+        if os.path.isfile(object_list):
+            with open(object_list) as f:
+                objects = list(csv.reader(f))
+                object_list = list([map(float, i) for i in objects])
+
         self.object_list = object_list
         self.CLASSES = self.get_classes(classes)
         self.test_mode = test_mode

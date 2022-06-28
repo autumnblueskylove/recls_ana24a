@@ -1,5 +1,6 @@
 import copy
 import math
+import os
 
 import mmcv
 import numpy as np
@@ -49,6 +50,7 @@ class CropInstance:
 @PIPELINES.register_module()
 class ConvertSceneToPatch:
     def __init__(self, patch_size=(512, 512)):
+        os.environ['JP2KAK_THREADS'] = '5'
 
         assert isinstance(patch_size, tuple)
         assert len(patch_size) == 2
@@ -80,12 +82,15 @@ class ConvertSceneToPatch:
         if patch.ndim == 2:
             patch = np.array([patch for _ in range(3)])
         patch = patch.transpose((1, 2, 0))
+        # TODO: temporary slicing sensor
+        patch = patch[:, :, :3]
 
         insert_h = int(self.patch_size[0] - (crop_h_end - crop_h_start))
         insert_w = int(self.patch_size[1] - (crop_w_end - crop_w_start))
+        h, w, c = patch.shape
 
-        pad_img[insert_h:self.patch_size[0] + insert_h,
-                insert_w:self.patch_size[1] + insert_w, :] = patch
+        pad_img[insert_h:h + insert_h, insert_w:w + insert_w, :] = patch
+
         return pad_img
 
     def __call__(self, results):
