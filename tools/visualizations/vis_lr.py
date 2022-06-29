@@ -22,6 +22,7 @@ class DummyEpochBasedRunner(EpochBasedRunner):
     This runner won't train model, and it will only call hooks and return all
     learning rate in each iteration.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.progress_bar = ProgressBar(self._max_epochs, start=False)
@@ -50,7 +51,8 @@ class DummyEpochBasedRunner(EpochBasedRunner):
         assert mmcv.is_list_of(workflow, tuple)
         assert len(data_loaders) == len(workflow)
 
-        assert self._max_epochs is not None, 'max_epochs must be specified during instantiation'
+        assert self._max_epochs is not None, (
+            'max_epochs must be specified during instantiation')
 
         for i, flow in enumerate(workflow):
             mode, epochs = flow
@@ -95,6 +97,7 @@ class DummyIterBasedRunner(IterBasedRunner):
     This runner won't train model, and it will only call hooks and return all
     learning rate in each iteration.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.progress_bar = ProgressBar(self._max_iters, start=False)
@@ -118,7 +121,8 @@ class DummyIterBasedRunner(IterBasedRunner):
         assert isinstance(data_loaders, list)
         assert mmcv.is_list_of(workflow, tuple)
         assert len(data_loaders) == len(workflow)
-        assert self._max_iters is not None, 'max_iters must be specified during instantiation'
+        assert self._max_iters is not None, (
+            'max_iters must be specified during instantiation')
 
         self.logger.info('workflow: %s, max: %d iters', workflow,
                          self._max_iters)
@@ -153,6 +157,7 @@ class DummyIterBasedRunner(IterBasedRunner):
 
 class SimpleModel(nn.Module):
     """simple model that do nothing in train_step."""
+
     def __init__(self):
         super(SimpleModel, self).__init__()
         self.conv = nn.Conv2d(1, 1, 1)
@@ -171,18 +176,18 @@ def parse_args():
         help='The size of the dataset. If specify, `build_dataset` will '
         'be skipped and use this size as the dataset size.',
     )
-    parser.add_argument('--ngpus',
-                        type=int,
-                        default=1,
-                        help='The number of GPUs used in training.')
+    parser.add_argument(
+        '--ngpus',
+        type=int,
+        default=1,
+        help='The number of GPUs used in training.')
     parser.add_argument('--title', type=str, help='title of figure')
-    parser.add_argument('--style',
-                        type=str,
-                        default='whitegrid',
-                        help='style of plt')
-    parser.add_argument('--save-path',
-                        type=Path,
-                        help='The learning rate curve plot save path')
+    parser.add_argument(
+        '--style', type=str, default='whitegrid', help='style of plt')
+    parser.add_argument(
+        '--save-path',
+        type=Path,
+        help='The learning rate curve plot save path')
     parser.add_argument(
         '--window-size',
         default='12*7',
@@ -230,9 +235,10 @@ def plot_curve(lr_list, args, iters_per_epoch, by_epoch=True):
         ax.xaxis.tick_top()
         ax.set_xlabel('Iters')
         ax.xaxis.set_label_position('top')
-        sec_ax = ax.secondary_xaxis('bottom',
-                                    functions=(lambda x: x / iters_per_epoch,
-                                               lambda y: y * iters_per_epoch))
+        sec_ax = ax.secondary_xaxis(
+            'bottom',
+            functions=(lambda x: x / iters_per_epoch,
+                       lambda y: y * iters_per_epoch))
         sec_ax.set_xlabel('Epochs')
         #  ticks = range(0, len(lr_list), iters_per_epoch)
         #  plt.xticks(ticks=ticks, labels=range(len(ticks)))
@@ -260,15 +266,17 @@ def simulate_train(data_loader, cfg, by_epoch=True):
 
     # build runner
     if by_epoch:
-        runner = DummyEpochBasedRunner(max_epochs=cfg.runner.max_epochs,
-                                       model=model,
-                                       optimizer=optimizer,
-                                       logger=logger)
+        runner = DummyEpochBasedRunner(
+            max_epochs=cfg.runner.max_epochs,
+            model=model,
+            optimizer=optimizer,
+            logger=logger)
     else:
-        runner = DummyIterBasedRunner(max_iters=cfg.runner.max_iters,
-                                      model=model,
-                                      optimizer=optimizer,
-                                      logger=logger)
+        runner = DummyIterBasedRunner(
+            max_iters=cfg.runner.max_iters,
+            model=model,
+            optimizer=optimizer,
+            logger=logger)
 
     # register hooks
     runner.register_training_hooks(

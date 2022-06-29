@@ -35,9 +35,10 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=32,
     workers_per_gpu=2,
-    train=dict(type=dataset_type,
-               data_prefix='data/imagenet/train',
-               pipeline=train_pipeline),
+    train=dict(
+        type=dataset_type,
+        data_prefix='data/imagenet/train',
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         data_prefix='data/imagenet/val',

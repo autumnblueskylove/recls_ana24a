@@ -42,10 +42,11 @@ def onnx2tensorrt(
     max_shape = [max_batch_size] + list(input_shape[1:])
     opt_shape_dict = {'input': [input_shape, input_shape, max_shape]}
     max_workspace_size = get_GiB(workspace_size)
-    trt_engine = onnx2trt(onnx_model,
-                          opt_shape_dict,
-                          fp16_mode=fp16_mode,
-                          max_workspace_size=max_workspace_size)
+    trt_engine = onnx2trt(
+        onnx_model,
+        opt_shape_dict,
+        fp16_mode=fp16_mode,
+        max_workspace_size=max_workspace_size)
     save_dir, _ = osp.split(trt_file)
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
@@ -84,10 +85,8 @@ def onnx2tensorrt(
         ]
 
         # Compare results
-        np.testing.assert_allclose(onnx_outputs[0],
-                                   trt_outputs[0],
-                                   rtol=1e-05,
-                                   atol=1e-05)
+        np.testing.assert_allclose(
+            onnx_outputs[0], trt_outputs[0], rtol=1e-05, atol=1e-05)
         print('The numerical values are the same ' +  # noqa W504
               'between ONNXRuntime and TensorRT')
 
@@ -96,27 +95,32 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert MMClassification models from ONNX to TensorRT')
     parser.add_argument('model', help='Filename of the input ONNX model')
-    parser.add_argument('--trt-file',
-                        type=str,
-                        default='tmp.trt',
-                        help='Filename of the output TensorRT engine')
-    parser.add_argument('--verify',
-                        action='store_true',
-                        help='Verify the outputs of ONNXRuntime and TensorRT')
-    parser.add_argument('--shape',
-                        type=int,
-                        nargs='+',
-                        default=[224, 224],
-                        help='Input size of the model')
-    parser.add_argument('--max-batch-size',
-                        type=int,
-                        default=1,
-                        help='Maximum batch size of TensorRT model.')
+    parser.add_argument(
+        '--trt-file',
+        type=str,
+        default='tmp.trt',
+        help='Filename of the output TensorRT engine')
+    parser.add_argument(
+        '--verify',
+        action='store_true',
+        help='Verify the outputs of ONNXRuntime and TensorRT')
+    parser.add_argument(
+        '--shape',
+        type=int,
+        nargs='+',
+        default=[224, 224],
+        help='Input size of the model')
+    parser.add_argument(
+        '--max-batch-size',
+        type=int,
+        default=1,
+        help='Maximum batch size of TensorRT model.')
     parser.add_argument('--fp16', action='store_true', help='Enable fp16 mode')
-    parser.add_argument('--workspace-size',
-                        type=int,
-                        default=1,
-                        help='Max workspace size of GPU in GiB')
+    parser.add_argument(
+        '--workspace-size',
+        type=int,
+        default=1,
+        help='Max workspace size of GPU in GiB')
     args = parser.parse_args()
     return args
 

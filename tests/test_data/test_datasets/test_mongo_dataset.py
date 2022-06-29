@@ -25,21 +25,25 @@ CATEGORIES = [
 
 
 class ObjectId(object):
+
     def __init__(self, index):
         self.id = index
 
 
 class MockScene:
+
     def __init__(self):
         self.db = [
-            dict(scene_path='sample.tif',
-                 scene_name='P0000',
-                 x_gsd=-1,
-                 y_gsd=-1),
-            dict(scene_path='sample.tif',
-                 scene_name='P0001',
-                 x_gsd=-1,
-                 y_gsd=-1)
+            dict(
+                scene_path='sample.tif',
+                scene_name='P0000',
+                x_gsd=-1,
+                y_gsd=-1),
+            dict(
+                scene_path='sample.tif',
+                scene_name='P0001',
+                x_gsd=-1,
+                y_gsd=-1)
         ]
 
     def find(self, empty={}):
@@ -53,6 +57,7 @@ class MockScene:
 
 
 class MockJson:
+
     def find(self, empty={}):
 
         return [{
@@ -102,7 +107,7 @@ class MockJson:
 @patch('pymongo.MongoClient')
 def test_mongo_dataset(mock_mongo, mock_gdal):
 
-    from clasymm.datasets import MongoDataset
+    from recls.datasets import MongoDataset
 
     mock_mongo.return_value = dict(
         dota2_0=dict(scene_lists=MockScene(), P0000=MockJson()))

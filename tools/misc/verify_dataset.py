@@ -26,10 +26,8 @@ def parse_args():
         choices=['train', 'test', 'val'],
         help='phase of dataset to visualize, accept "train" "test" and "val".',
     )
-    parser.add_argument('--num-process',
-                        type=int,
-                        default=1,
-                        help='number of process to use')
+    parser.add_argument(
+        '--num-process', type=int, default=1, help='number of process to use')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -49,6 +47,7 @@ def parse_args():
 
 class DatasetValidator:
     """the dataset tool class to check if all file are broken."""
+
     def __init__(self, dataset_cfg, log_file_path, phase):
         super(DatasetValidator, self).__init__()
         # keep only LoadImageFromFile pipeline

@@ -1,7 +1,7 @@
-import clasymm  # noqa: F401
 import numpy as np
 from mmcv.utils import build_from_cfg
 
+import recls  # noqa: F401
 from mmcls.datasets.builder import PIPELINES
 
 

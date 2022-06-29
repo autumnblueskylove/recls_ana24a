@@ -27,8 +27,8 @@ def _demo_mm_inputs(input_shape: tuple, num_classes: int):
     (N, C, H, W) = input_shape
     rng = np.random.RandomState(0)
     imgs = rng.rand(*input_shape)
-    gt_labels = rng.randint(low=0, high=num_classes,
-                            size=(N, 1)).astype(np.uint8)
+    gt_labels = rng.randint(
+        low=0, high=num_classes, size=(N, 1)).astype(np.uint8)
     mm_inputs = {
         'imgs': torch.FloatTensor(imgs).requires_grad_(False),
         'gt_labels': torch.LongTensor(gt_labels),
@@ -93,16 +93,18 @@ def parse_args():
         description='Convert MMCls to TorchScript')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file', type=str)
-    parser.add_argument('--verify',
-                        action='store_true',
-                        help='verify the TorchScript model',
-                        default=False)
+    parser.add_argument(
+        '--verify',
+        action='store_true',
+        help='verify the TorchScript model',
+        default=False)
     parser.add_argument('--output-file', type=str, default='tmp.pt')
-    parser.add_argument('--shape',
-                        type=int,
-                        nargs='+',
-                        default=[224, 224],
-                        help='input image size')
+    parser.add_argument(
+        '--shape',
+        type=int,
+        nargs='+',
+        default=[224, 224],
+        help='input image size')
     args = parser.parse_args()
     return args
 
@@ -130,7 +132,8 @@ if __name__ == '__main__':
         load_checkpoint(classifier, args.checkpoint, map_location='cpu')
 
     # convert model to TorchScript file
-    pytorch2torchscript(classifier,
-                        input_shape,
-                        output_file=args.output_file,
-                        verify=args.verify)
+    pytorch2torchscript(
+        classifier,
+        input_shape,
+        output_file=args.output_file,
+        verify=args.verify)

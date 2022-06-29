@@ -8,10 +8,11 @@ model = dict(
         patch_size=16,
         drop_rate=0.1,
         init_cfg=[
-            dict(type='Kaiming',
-                 layer='Conv2d',
-                 mode='fan_in',
-                 nonlinearity='linear')
+            dict(
+                type='Kaiming',
+                layer='Conv2d',
+                mode='fan_in',
+                nonlinearity='linear')
         ],
     ),
     neck=None,

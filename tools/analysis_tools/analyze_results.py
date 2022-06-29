@@ -16,10 +16,11 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('result', help='test result json/pkl file')
     parser.add_argument('--out-dir', help='dir to store output files')
-    parser.add_argument('--topk',
-                        default=20,
-                        type=int,
-                        help='Number of images to select for success/fail')
+    parser.add_argument(
+        '--topk',
+        default=20,
+        type=int,
+        help='Number of images to select for success/fail')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -70,9 +71,11 @@ def main():
 
     # load test results
     outputs = mmcv.load(args.result)
-    assert 'pred_score' in outputs and 'pred_class' in outputs and 'pred_label' in outputs, (
-        'No "pred_label", "pred_score" or "pred_class" in result file, '
-        'please set "--out-items" in test.py')
+    assert (
+        'pred_score' in outputs and 'pred_class' in outputs
+        and 'pred_label' in outputs), (
+            'No "pred_label", "pred_score" or "pred_class" in result file, '
+            'please set "--out-items" in test.py')
 
     cfg = mmcv.Config.fromfile(args.config)
     if args.cfg_options is not None:

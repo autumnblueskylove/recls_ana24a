@@ -5,16 +5,16 @@ _base_ = [
     '../_base_/default_runtime.py',
 ]
 
-img_norm_cfg = dict(mean=[127.5, 127.5, 127.5],
-                    std=[127.5, 127.5, 127.5],
-                    to_rgb=True)
+img_norm_cfg = dict(
+    mean=[127.5, 127.5, 127.5], std=[127.5, 127.5, 127.5], to_rgb=True)
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='Resize',
-         size=(248, -1),
-         interpolation='bicubic',
-         backend='pillow'),
+    dict(
+        type='Resize',
+        size=(248, -1),
+        interpolation='bicubic',
+        backend='pillow'),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
@@ -22,9 +22,8 @@ test_pipeline = [
 ]
 
 dataset_type = 'ImageNet'
-data = dict(samples_per_gpu=64,
-            workers_per_gpu=4,
-            test=dict(pipeline=test_pipeline))
+data = dict(
+    samples_per_gpu=64, workers_per_gpu=4, test=dict(pipeline=test_pipeline))
 
 # optimizer
 optimizer = dict(type='AdamW', lr=1e-3, weight_decay=0.05)

@@ -8,9 +8,8 @@ _base_ = [
 
 model = dict(backbone=dict(img_size=384))
 
-img_norm_cfg = dict(mean=[127.5, 127.5, 127.5],
-                    std=[127.5, 127.5, 127.5],
-                    to_rgb=True)
+img_norm_cfg = dict(
+    mean=[127.5, 127.5, 127.5], std=[127.5, 127.5, 127.5], to_rgb=True)
 
 train_pipeline = [
     dict(type='LoadImageFromFile'),

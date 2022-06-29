@@ -22,9 +22,8 @@ _base_ = [
     '../_base_/default_runtime.py',
 ]
 
-img_norm_cfg = dict(mean=[123.675, 116.28, 103.53],
-                    std=[58.395, 57.12, 57.375],
-                    to_rgb=True)
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 policies = [
     [
@@ -94,10 +93,11 @@ policies = [
         dict(type='Invert', prob=0.6)
     ],
     [
-        dict(type='Shear',
-             magnitude=0.3 / 9 * 5,
-             prob=0.6,
-             direction='horizontal'),
+        dict(
+            type='Shear',
+            magnitude=0.3 / 9 * 5,
+            prob=0.6,
+            direction='horizontal'),
         dict(type='Equalize', prob=1.0),
     ],
     [
@@ -141,18 +141,20 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label']),
 ]
 
-data = dict(samples_per_gpu=128,
-            workers_per_gpu=4,
-            train=dict(pipeline=train_pipeline))
+data = dict(
+    samples_per_gpu=128,
+    workers_per_gpu=4,
+    train=dict(pipeline=train_pipeline))
 evaluation = dict(interval=10, metric='accuracy')
 
 # optimizer
-optimizer = dict(type='RMSprop',
-                 lr=0.064,
-                 alpha=0.9,
-                 momentum=0.9,
-                 eps=0.0316,
-                 weight_decay=1e-5)
+optimizer = dict(
+    type='RMSprop',
+    lr=0.064,
+    alpha=0.9,
+    momentum=0.9,
+    eps=0.0316,
+    weight_decay=1e-5)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(policy='step', step=2, gamma=0.973, by_epoch=True)

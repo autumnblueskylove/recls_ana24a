@@ -3,16 +3,16 @@ import argparse
 import os
 import pickle
 
-import clasymm  # noqa: F401
 import mlflow
 import mmcv
 import torch
-from clasymm.apis import inference_geococo_model
 from mmcv.parallel import MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
+import recls  # noqa: F401
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.models import build_classifier
+from recls.apis import inference_geococo_model
 
 
 def parse_args():
@@ -21,8 +21,8 @@ def parse_args():
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
-    parser.add_argument('--show-dir',
-                        help='directory where painted images will be saved')
+    parser.add_argument(
+        '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -102,9 +102,10 @@ def main():
     model = build_classifier(cfg.model)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    model = MMDistributedDataParallel(model.cuda(),
-                                      device_ids=[torch.cuda.current_device()],
-                                      broadcast_buffers=False)
+    model = MMDistributedDataParallel(
+        model.cuda(),
+        device_ids=[torch.cuda.current_device()],
+        broadcast_buffers=False)
 
     results = inference_geococo_model(model, dataloader)
     rank, world_size = get_dist_info()

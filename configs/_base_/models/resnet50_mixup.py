@@ -1,11 +1,12 @@
 # model settings
 model = dict(
     type='ImageClassifier',
-    backbone=dict(type='ResNet',
-                  depth=50,
-                  num_stages=4,
-                  out_indices=(3, ),
-                  style='pytorch'),
+    backbone=dict(
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(3, ),
+        style='pytorch'),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='MultiLabelLinearClsHead',
@@ -13,6 +14,7 @@ model = dict(
         in_channels=2048,
         loss=dict(type='CrossEntropyLoss', loss_weight=1.0, use_soft=True),
     ),
-    train_cfg=dict(augments=dict(
-        type='BatchMixup', alpha=0.2, num_classes=1000, prob=1.0)),
+    train_cfg=dict(
+        augments=dict(
+            type='BatchMixup', alpha=0.2, num_classes=1000, prob=1.0)),
 )

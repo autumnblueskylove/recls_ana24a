@@ -27,19 +27,15 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=128,
     workers_per_gpu=2,
-    train=dict(type=dataset_type,
-               data_prefix='data/mnist',
-               pipeline=train_pipeline),
-    val=dict(type=dataset_type,
-             data_prefix='data/mnist',
-             pipeline=test_pipeline),
-    test=dict(type=dataset_type,
-              data_prefix='data/mnist',
-              pipeline=test_pipeline),
+    train=dict(
+        type=dataset_type, data_prefix='data/mnist', pipeline=train_pipeline),
+    val=dict(
+        type=dataset_type, data_prefix='data/mnist', pipeline=test_pipeline),
+    test=dict(
+        type=dataset_type, data_prefix='data/mnist', pipeline=test_pipeline),
 )
-evaluation = dict(interval=5,
-                  metric='accuracy',
-                  metric_options={'topk': (1, )})
+evaluation = dict(
+    interval=5, metric='accuracy', metric_options={'topk': (1, )})
 # optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)

@@ -4,9 +4,8 @@ _base_ = [
 
 # dataset settings
 dataset_type = 'ImageNet'
-img_norm_cfg = dict(mean=[123.675, 116.28, 103.53],
-                    std=[58.395, 57.12, 57.375],
-                    to_rgb=True)
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='RandomResizedCrop', size=224, backend='pillow'),
@@ -28,9 +27,10 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=64,
     workers_per_gpu=2,
-    train=dict(type=dataset_type,
-               data_prefix='data/imagenet/train',
-               pipeline=train_pipeline),
+    train=dict(
+        type=dataset_type,
+        data_prefix='data/imagenet/train',
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         data_prefix='data/imagenet/val',

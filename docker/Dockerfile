@@ -17,7 +17,7 @@ RUN python3 setup.py build && python3 setup.py install
 
 RUN pip install mmcv-full==1.4.7 -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.9.0/index.html
 
-WORKDIR /clasymm
+WORKDIR /recls
 
-COPY . /clasymm
+COPY . /recls
 RUN pip3 install --no-cache-dir -e ".[optional]"

@@ -26,8 +26,8 @@ def _demo_mm_inputs(input_shape, num_classes):
     (N, C, H, W) = input_shape
     rng = np.random.RandomState(0)
     imgs = rng.rand(*input_shape)
-    gt_labels = rng.randint(low=0, high=num_classes,
-                            size=(N, 1)).astype(np.uint8)
+    gt_labels = rng.randint(
+        low=0, high=num_classes, size=(N, 1)).astype(np.uint8)
     mm_inputs = {
         'imgs': torch.FloatTensor(imgs).requires_grad_(True),
         'gt_labels': torch.LongTensor(gt_labels),
@@ -184,19 +184,20 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file', default=None)
     parser.add_argument('--show', action='store_true', help='show onnx graph')
-    parser.add_argument('--verify',
-                        action='store_true',
-                        help='verify the onnx model')
+    parser.add_argument(
+        '--verify', action='store_true', help='verify the onnx model')
     parser.add_argument('--output-file', type=str, default='tmp.onnx')
     parser.add_argument('--opset-version', type=int, default=11)
-    parser.add_argument('--simplify',
-                        action='store_true',
-                        help='Whether to simplify onnx model.')
-    parser.add_argument('--shape',
-                        type=int,
-                        nargs='+',
-                        default=[224, 224],
-                        help='input image size')
+    parser.add_argument(
+        '--simplify',
+        action='store_true',
+        help='Whether to simplify onnx model.')
+    parser.add_argument(
+        '--shape',
+        type=int,
+        nargs='+',
+        default=[224, 224],
+        help='input image size')
     parser.add_argument(
         '--dynamic-export',
         action='store_true',

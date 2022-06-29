@@ -6,12 +6,12 @@ import os.path as osp
 import time
 import warnings
 
-import clasymm  # noqa: F403, F401
 import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
 
+import recls  # noqa: F403, F401
 from mmcls import __version__
 from mmcls.apis import set_random_seed, train_model
 from mmcls.datasets import build_dataset
@@ -23,10 +23,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a model')
     parser.add_argument('config', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
-    parser.add_argument('--load-from',
-                        help='the checkpoint file to load weights from')
-    parser.add_argument('--resume-from',
-                        help='the checkpoint file to resume from')
+    parser.add_argument(
+        '--load-from', help='the checkpoint file to load weights from')
+    parser.add_argument(
+        '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(
         '--no-validate',
         action='store_true',
@@ -180,9 +180,10 @@ def main():
     if cfg.checkpoint_config is not None:
         # save mmcls version, config file content and class names in
         # checkpoints as meta data
-        cfg.checkpoint_config.meta = dict(mmcls_version=__version__,
-                                          config=cfg.pretty_text,
-                                          CLASSES=datasets[0].CLASSES)
+        cfg.checkpoint_config.meta = dict(
+            mmcls_version=__version__,
+            config=cfg.pretty_text,
+            CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     train_model(
         model,

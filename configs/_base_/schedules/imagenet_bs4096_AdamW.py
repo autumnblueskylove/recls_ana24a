@@ -9,9 +9,10 @@ paramwise_cfg = dict(
         '.backbone.pos_embed': dict(decay_mult=0.0),
     })
 # learning policy
-lr_config = dict(policy='CosineAnnealing',
-                 min_lr=0,
-                 warmup='linear',
-                 warmup_iters=10000,
-                 warmup_ratio=1e-4)
+lr_config = dict(
+    policy='CosineAnnealing',
+    min_lr=0,
+    warmup='linear',
+    warmup_iters=10000,
+    warmup_ratio=1e-4)
 runner = dict(type='EpochBasedRunner', max_epochs=300)

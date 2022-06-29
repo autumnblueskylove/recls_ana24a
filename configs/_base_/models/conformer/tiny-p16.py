@@ -1,19 +1,16 @@
 # model settings
 model = dict(
     type='ImageClassifier',
-    backbone=dict(type='Conformer',
-                  arch='tiny',
-                  drop_path_rate=0.1,
-                  init_cfg=None),
+    backbone=dict(
+        type='Conformer', arch='tiny', drop_path_rate=0.1, init_cfg=None),
     neck=None,
     head=dict(
         type='ConformerHead',
         num_classes=1000,
         in_channels=[256, 384],
         init_cfg=None,
-        loss=dict(type='LabelSmoothLoss',
-                  label_smooth_val=0.1,
-                  mode='original'),
+        loss=dict(
+            type='LabelSmoothLoss', label_smooth_val=0.1, mode='original'),
         cal_acc=False,
     ),
     init_cfg=[

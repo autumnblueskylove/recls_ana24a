@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-version_file = 'clasymm/version.py'
+version_file = 'recls/version.py'
 
 
 def parse_requirements(fname='requirements.txt', with_version=True):
@@ -88,8 +88,8 @@ def get_version():
 
 if __name__ == '__main__':
     setup(
-        name='clasymm',
-        version='0.4',
+        name='recls',
+        version=get_version(),
         author='SIA',
         packages=find_packages(exclude=('configs', 'tools')),
         install_requires=parse_requirements('requirements/runtime.txt'),

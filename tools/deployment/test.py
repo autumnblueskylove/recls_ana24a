@@ -17,12 +17,12 @@ def parse_args():
         description='Test (and eval) an ONNX model using ONNXRuntime.')
     parser.add_argument('config', help='model config file')
     parser.add_argument('model', help='filename of the input ONNX model')
-    parser.add_argument('--backend',
-                        help='Backend of the model.',
-                        choices=['onnxruntime', 'tensorrt'])
-    parser.add_argument('--out',
-                        type=str,
-                        help='output result file in pickle format')
+    parser.add_argument(
+        '--backend',
+        help='Backend of the model.',
+        choices=['onnxruntime', 'tensorrt'])
+    parser.add_argument(
+        '--out', type=str, help='output result file in pickle format')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -49,8 +49,8 @@ def parse_args():
         ' function.',
     )
     parser.add_argument('--show', action='store_true', help='show results')
-    parser.add_argument('--show-dir',
-                        help='directory where painted images will be saved')
+    parser.add_argument(
+        '--show-dir', help='directory where painted images will be saved')
     args = parser.parse_args()
     return args
 
@@ -77,13 +77,11 @@ def main():
 
     # build onnxruntime model and run inference.
     if args.backend == 'onnxruntime':
-        model = ONNXRuntimeClassifier(args.model,
-                                      class_names=dataset.CLASSES,
-                                      device_id=0)
+        model = ONNXRuntimeClassifier(
+            args.model, class_names=dataset.CLASSES, device_id=0)
     elif args.backend == 'tensorrt':
-        model = TensorRTClassifier(args.model,
-                                   class_names=dataset.CLASSES,
-                                   device_id=0)
+        model = TensorRTClassifier(
+            args.model, class_names=dataset.CLASSES, device_id=0)
     else:
         print('Unknown backend: {}.'.format(args.model))
         exit()

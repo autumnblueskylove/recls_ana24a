@@ -10,6 +10,7 @@ from mmcls.apis import inference_model, init_model
 
 
 class MMclsHandler(BaseHandler):
+
     def initialize(self, context):
         properties = context.system_properties
         self.map_location = 'cuda' if torch.cuda.is_available() else 'cpu'

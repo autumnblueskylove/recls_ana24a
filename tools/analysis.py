@@ -3,7 +3,8 @@ import os
 import pickle
 
 import mlflow
-from clasymm.utils import evaluate_per_class, evaluate_per_sensor
+
+from recls.utils import evaluate_per_class, evaluate_per_sensor
 
 
 def parse_args():

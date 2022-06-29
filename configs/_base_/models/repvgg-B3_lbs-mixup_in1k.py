@@ -19,6 +19,7 @@ model = dict(
         ),
         topk=(1, 5),
     ),
-    train_cfg=dict(augments=dict(
-        type='BatchMixup', alpha=0.2, num_classes=1000, prob=1.0)),
+    train_cfg=dict(
+        augments=dict(
+            type='BatchMixup', alpha=0.2, num_classes=1000, prob=1.0)),
 )

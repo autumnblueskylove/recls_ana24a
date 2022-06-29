@@ -4,12 +4,12 @@ import os
 import mmcv
 import torch
 import torch.distributed as dist
-from clasymm.apis import Classifier, inference_classifier_with_scene
 from mlflow.tracking import MlflowClient
 from mmcv.runner import get_dist_info, init_dist
 from mmcv.utils import track_iter_progress
 
 from mmcls.utils import setup_multi_processes
+from recls.apis import Classifier, inference_classifier_with_scene
 
 ARTIFACT_PATH = 'checkpoint'
 ARTIFACT_INFERENCE_PATH = os.path.join(ARTIFACT_PATH, 'inference')
@@ -20,16 +20,18 @@ MODEL_WEIGHT_FILE = 'model_final.pth'
 def parse_args():
     parser = argparse.ArgumentParser(
         description='ClasyMM batch inference (and log) a model')
-    parser.add_argument('config',
-                        type=str,
-                        nargs='?',
-                        default=None,
-                        help='test config file path')
-    parser.add_argument('checkpoint',
-                        type=str,
-                        nargs='?',
-                        default=None,
-                        help='checkpoint file')
+    parser.add_argument(
+        'config',
+        type=str,
+        nargs='?',
+        default=None,
+        help='test config file path')
+    parser.add_argument(
+        'checkpoint',
+        type=str,
+        nargs='?',
+        default=None,
+        help='checkpoint file')
     parser.add_argument(
         '--path',
         '--paths',
@@ -39,20 +41,19 @@ def parse_args():
         default=[],
         help='path to input image dirs or files. if no path is given, '
         'it will use `cfg.scene_test_dataset.image_paths` values.')
-    parser.add_argument('--run-id',
-                        type=str,
-                        default=None,
-                        help='mlflow run id')
+    parser.add_argument(
+        '--run-id', type=str, default=None, help='mlflow run id')
     parser.add_argument(
         '--save-path',
         '--show-dir',
         type=str,
         default='inference',
         help='path to store images and if not given, will not save image')
-    parser.add_argument('--launcher',
-                        choices=['none', 'pytorch', 'slurm', 'mpi'],
-                        default='none',
-                        help='job launcher')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--tmpdir', type=str, default='.batch_inference')
     args = parser.parse_args()
@@ -139,8 +140,8 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     rank, world_size = get_dist_info()
-    files = parse_scenes(args.path
-                         or cfg.get('scene_test_dataset').image_paths)
+    files = parse_scenes(
+        args.path or cfg.get('scene_test_dataset').image_paths)
     for file in track_iter_progress(files[rank::world_size]):
 
         inference_classifier_with_scene(model, file, output_dir=args.save_path)

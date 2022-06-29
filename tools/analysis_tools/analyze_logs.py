@@ -81,10 +81,8 @@ def plot_curve(log_dicts, args):
                 xs = np.concatenate(xs)
                 ys = np.concatenate(ys)
                 plt.xlabel('iter')
-                plt.plot(xs,
-                         ys,
-                         label=legend[i * num_metrics + j],
-                         linewidth=0.5)
+                plt.plot(
+                    xs, ys, label=legend[i * num_metrics + j], linewidth=0.5)
             plt.legend()
         if args.title is not None:
             plt.title(args.title)
@@ -97,31 +95,30 @@ def plot_curve(log_dicts, args):
 
 
 def add_plot_parser(subparsers):
-    parser_plt = subparsers.add_parser('plot_curve',
-                                       help='parser for plotting curves')
-    parser_plt.add_argument('json_logs',
-                            type=str,
-                            nargs='+',
-                            help='path of train log in json format')
-    parser_plt.add_argument('--keys',
-                            type=str,
-                            nargs='+',
-                            default=['loss'],
-                            help='the metric that you want to plot')
+    parser_plt = subparsers.add_parser(
+        'plot_curve', help='parser for plotting curves')
+    parser_plt.add_argument(
+        'json_logs',
+        type=str,
+        nargs='+',
+        help='path of train log in json format')
+    parser_plt.add_argument(
+        '--keys',
+        type=str,
+        nargs='+',
+        default=['loss'],
+        help='the metric that you want to plot')
     parser_plt.add_argument('--title', type=str, help='title of figure')
-    parser_plt.add_argument('--legend',
-                            type=str,
-                            nargs='+',
-                            default=None,
-                            help='legend of each plot')
-    parser_plt.add_argument('--backend',
-                            type=str,
-                            default=None,
-                            help='backend of plt')
-    parser_plt.add_argument('--style',
-                            type=str,
-                            default='dark',
-                            help='style of plt')
+    parser_plt.add_argument(
+        '--legend',
+        type=str,
+        nargs='+',
+        default=None,
+        help='legend of each plot')
+    parser_plt.add_argument(
+        '--backend', type=str, default=None, help='backend of plt')
+    parser_plt.add_argument(
+        '--style', type=str, default='dark', help='style of plt')
     parser_plt.add_argument('--out', type=str, default=None)
 
 
@@ -129,10 +126,11 @@ def add_time_parser(subparsers):
     parser_time = subparsers.add_parser(
         'cal_train_time',
         help='parser for computing the average time per training iteration')
-    parser_time.add_argument('json_logs',
-                             type=str,
-                             nargs='+',
-                             help='path of train log in json format')
+    parser_time.add_argument(
+        'json_logs',
+        type=str,
+        nargs='+',
+        help='path of train log in json format')
     parser_time.add_argument(
         '--include-outliers',
         action='store_true',

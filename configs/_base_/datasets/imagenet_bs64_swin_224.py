@@ -2,16 +2,16 @@ _base_ = ['./pipelines/rand_aug.py']
 
 # dataset settings
 dataset_type = 'ImageNet'
-img_norm_cfg = dict(mean=[123.675, 116.28, 103.53],
-                    std=[58.395, 57.12, 57.375],
-                    to_rgb=True)
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='RandomResizedCrop',
-         size=224,
-         backend='pillow',
-         interpolation='bicubic'),
+    dict(
+        type='RandomResizedCrop',
+        size=224,
+        backend='pillow',
+        interpolation='bicubic'),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(
         type='RandAugment',
@@ -20,8 +20,9 @@ train_pipeline = [
         total_level=10,
         magnitude_level=9,
         magnitude_std=0.5,
-        hparams=dict(pad_val=[round(x) for x in img_norm_cfg['mean'][::-1]],
-                     interpolation='bicubic'),
+        hparams=dict(
+            pad_val=[round(x) for x in img_norm_cfg['mean'][::-1]],
+            interpolation='bicubic'),
     ),
     dict(
         type='RandomErasing',
@@ -40,10 +41,11 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='Resize',
-         size=(256, -1),
-         backend='pillow',
-         interpolation='bicubic'),
+    dict(
+        type='Resize',
+        size=(256, -1),
+        backend='pillow',
+        interpolation='bicubic'),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
@@ -52,9 +54,10 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=64,
     workers_per_gpu=8,
-    train=dict(type=dataset_type,
-               data_prefix='data/imagenet/train',
-               pipeline=train_pipeline),
+    train=dict(
+        type=dataset_type,
+        data_prefix='data/imagenet/train',
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         data_prefix='data/imagenet/val',

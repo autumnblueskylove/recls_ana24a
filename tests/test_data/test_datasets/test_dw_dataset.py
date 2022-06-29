@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from clasymm.datasets.api_wrappers import DataPlatformReader
+from recls.datasets.api_wrappers import DataPlatformReader
 
 
 @patch('psycopg2.connect')
@@ -16,7 +16,7 @@ def test_dataplatform_dataset(mock_get_scene, mock_get_obj, mock_check_obj,
     mock_check_obj.return_value = None
     mock_connect.return_value.cursor.return_value = None
 
-    from clasymm.datasets import DataPlatformDataset
+    from recls.datasets import DataPlatformDataset
 
     DataPlatformDataset(
         pipeline=[],

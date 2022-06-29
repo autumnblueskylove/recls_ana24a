@@ -4,7 +4,6 @@ import os
 import warnings
 from numbers import Number
 
-import clasymm  # noqa: F401
 import mmcv
 import numpy as np
 import torch
@@ -12,6 +11,7 @@ from mmcv import DictAction
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
+import recls  # noqa: F401
 from mmcls.apis import multi_gpu_test, single_gpu_test
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.models import build_classifier
@@ -53,11 +53,12 @@ def parse_args():
         'multi-label dataset',
     )
     parser.add_argument('--show', action='store_true', help='show results')
-    parser.add_argument('--show-dir',
-                        help='directory where painted images will be saved')
-    parser.add_argument('--gpu-collect',
-                        action='store_true',
-                        help='whether to use gpu to collect results')
+    parser.add_argument(
+        '--show-dir', help='directory where painted images will be saved')
+    parser.add_argument(
+        '--gpu-collect',
+        action='store_true',
+        help='whether to use gpu to collect results')
     parser.add_argument('--tmpdir', help='tmp dir for writing some results')
     parser.add_argument(
         '--cfg-options',
@@ -101,10 +102,11 @@ def parse_args():
         help='job launcher',
     )
     parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument('--device',
-                        choices=['cpu', 'cuda'],
-                        default='cuda',
-                        help='device used for testing')
+    parser.add_argument(
+        '--device',
+        choices=['cpu', 'cuda'],
+        default='cuda',
+        help='device used for testing')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
