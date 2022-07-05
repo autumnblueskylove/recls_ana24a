@@ -24,7 +24,7 @@ concurrency:
 env:
   DOCKERFILE_PATH: "docker/Dockerfile"
   PROJECT_NAME: research
-  APP_NAME: clasymm
+  APP_NAME: recls
   PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
 
 jobs:
