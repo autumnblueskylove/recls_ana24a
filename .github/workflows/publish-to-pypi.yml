@@ -1,0 +1,31 @@
+name: deploy
+
+on:
+  push:
+    tags:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-n-publish:
+    runs-on: ["self-hosted", "linux", "ubuntu20.04", "python3"]
+    timeout-minutes: 20
+    if: startsWith(github.event.ref, 'refs/tags')
+    steps:
+    - name: checkout main
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: update setuptools
+      run: pip3 install setuptools --upgrade
+    - name: install dependencies
+      run: pip3 install torch wheel
+    - name: Build recls
+      run: python3 setup.py sdist bdist_wheel
+    - name: publish distribution to PyPI
+      run: |
+        pip3 install twine
+        twine upload --repository-url ${{ secrets.PYPI_INDEX_URL }} dist/* -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PW }}
