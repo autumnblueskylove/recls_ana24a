@@ -6,13 +6,12 @@ import pickle
 import mlflow
 import mmcv
 import torch
-from mmcv.parallel import MMDistributedDataParallel
-from mmcv.runner import get_dist_info, init_dist, load_checkpoint
+from mmcv.runner import load_checkpoint
 
 import recls  # noqa: F401
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.models import build_classifier
-from recls.apis import inference_geococo_model
+from recls.apis import inference_single_gpu_dp_model
 
 
 def parse_args():
@@ -86,36 +85,32 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
 
-    init_dist(args.launcher, **cfg.dist_params)
-    torch.cuda.set_device(get_dist_info()[0])
+    for pipeline in cfg.data.val.pipeline:
+        if pipeline['type'] == 'Collect':
+            pipeline['keys'].append('gt_label')
 
     dataset = build_dataset(cfg.data.val)
     dataloader = build_dataloader(
         dataset,
+        num_gpus=1,
         samples_per_gpu=cfg.data.samples_per_gpu,
         workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=True,
+        dist=False,
         shuffle=False,
         round_up=True,
     )
 
     model = build_classifier(cfg.model)
+    model = model.cuda()
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    model = MMDistributedDataParallel(
-        model.cuda(),
-        device_ids=[torch.cuda.current_device()],
-        broadcast_buffers=False)
+    results = inference_single_gpu_dp_model(model, dataloader)
+    with open(
+            os.path.join(args.local_path, args.artifact_path, 'result.pkl'),
+            'wb') as f:
+        pickle.dump(results, f)
 
-    results = inference_geococo_model(model, dataloader)
-    rank, world_size = get_dist_info()
-    if rank == 0:
-        with open(
-                os.path.join(args.local_path, args.artifact_path,
-                             'result.pkl'), 'wb') as f:
-            pickle.dump(results, f)
-
-        mlflow_log_artifact()
+    mlflow_log_artifact()
 
 
 if __name__ == '__main__':

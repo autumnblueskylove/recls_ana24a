@@ -30,6 +30,53 @@ def collect_results(result_part):
         return part_list
 
 
+def inference_single_gpu_dp_model(model, data_loader, tmpdir=None):
+
+    model.eval()
+    results = []
+    dataset = data_loader.dataset
+    time.sleep(2)
+
+    filenames = list()
+    results = list()
+    gt_labels = list()
+
+    prog_bar = mmcv.ProgressBar(len(dataset))
+    for i, data in enumerate(data_loader):
+        filename = data['img_metas'].data[0]
+        gt_label = list(data['gt_label'].cpu().numpy())
+        with torch.no_grad():
+            result = model(
+                return_loss=False,
+                img=data['img'].cuda(),
+                img_metas=data['img_metas'])
+
+        if isinstance(result, list):
+            results.extend(result)
+        else:
+            results.append(result)
+
+        if isinstance(filename, list):
+            filenames.extend(filename)
+        else:
+            filenames.append(filename)
+
+        if isinstance(gt_label, list):
+            gt_labels.extend(gt_label)
+        else:
+            gt_labels.append(gt_label)
+
+        batch_size = data['img'].size(0)
+        for _ in range(batch_size):
+            prog_bar.update()
+
+    info_results = [
+        dict(filename=filename, label=label, result=result)
+        for result, filename, label in zip(results, filenames, gt_labels)
+    ]
+    return info_results
+
+
 def inference_geococo_model(model,
                             data_loader,
                             tmpdir=None,
