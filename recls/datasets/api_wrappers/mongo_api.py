@@ -4,6 +4,13 @@ try:
 except ImportError:
     IMPORT_MONGO = False
     MongoClient = object
+
+try:
+    from osgeo import gdal
+    IMPORT_GDAL = True
+except ImportError:
+    IMPORT_GDAL = False
+
 from typing import List, Union
 
 from tqdm import tqdm
@@ -45,6 +52,15 @@ class MongoGeoCOCO(object):
         assert class_idx != -1
         return class_idx
 
+    def filter_by_raster(self, scene_info, objs):
+        src = gdal.Open(scene_info['scene_path'])
+        scene_width, scene_height = src.RasterXSize, src.RasterYSize
+        in_raster_objs = list()
+        for obj in objs:
+            if obj['x'] < scene_width and obj['y'] < scene_height:
+                in_raster_objs.append(obj)
+        return in_raster_objs
+
     def make_dataset(self):
 
         db = self.client[self.dbname]
@@ -66,6 +82,7 @@ class MongoGeoCOCO(object):
             objs = [
                 cursor for cursor in obj_collection.find({'$or': search_query})
             ]
+            objs = self.filter_by_raster(scene_info, objs)
             for obj in objs:
                 obj['scene_path'] = scene_path
                 obj['category_id'] = self.get_class_idx(obj['class_name'])
