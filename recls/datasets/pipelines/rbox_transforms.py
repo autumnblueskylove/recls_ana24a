@@ -103,7 +103,6 @@ class ConvertSceneToPatch:
         patch = self.make_patch(filename, coordinate)
 
         results['img'] = patch
-        results['img_info']['scene_coordinate'] = coordinate
         results['img_info']['coordinate'][0] = int(self.patch_size[1] / 2)
         results['img_info']['coordinate'][1] = int(self.patch_size[0] / 2)
 
