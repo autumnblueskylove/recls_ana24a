@@ -99,6 +99,8 @@ class ConvertSceneToPatch:
     def __call__(self, results):
 
         coordinate = results['img_info']['coordinate']
+        scene_coordinate = copy.deepcopy(coordinate)
+        results['img_info']['scene_coordinate'] = scene_coordinate
         filename = results['img_info']['filename']
         patch = self.make_patch(filename, coordinate)
 
