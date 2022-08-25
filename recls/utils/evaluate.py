@@ -55,7 +55,8 @@ def evaluate_per_class(results):
     for result in tqdm(results):
         logit = result['result']
         label = result['label']
-        include, key = filter_by_key(list(class_map.keys()), str(label))
+
+        include, key = filter_by_key(list(class_map.keys()), [str(label)])
         if include:
             class_map[key].append(dict(
                 gt_label=label,
