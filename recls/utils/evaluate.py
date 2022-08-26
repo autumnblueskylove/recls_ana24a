@@ -17,13 +17,15 @@ class EvalMetrics(GeoCOCODataset):
     ):
         self.data_infos = infos
         self.logits = [info['logit'] for info in self.data_infos]
-        self.topk = dict(topk=(1, topk))
+        self.metric_options = dict(topk=(1, topk), average_mode='none')
         self.metric = metric
         self.add_key = add_key
 
     def get_metric(self):
         metric = self.evaluate(
-            self.logits, metric_options=self.topk, metric=self.metric)
+            self.logits,
+            metric_options=self.metric_options,
+            metric=self.metric)
         add_metric = {
             os.path.join(self.add_key, k): v
             for k, v in metric.items()
