@@ -45,7 +45,6 @@ class Classifier:
                 '`CropInstance`')
 
         self.test_pipeline = Compose(test_pipeline)
-        self.is_cuda = next(self.model.parameters()).is_cuda
 
     def load_model(self, cfg_path: str, weight_path: str):
         """Load model from config and weight and initialize it.
