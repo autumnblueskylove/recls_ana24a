@@ -28,7 +28,7 @@ class DataPlatformDataset(MongoDataset):
         self.pipeline = Compose(pipeline)
         self.dbname = dbname
         self.categories = categories
-        if os.path.isfile(object_list):
+        if isinstance(object_list, str) and os.path.isfile(object_list):
             with open(object_list) as f:
                 objects = list(csv.reader(f))
                 object_list = list([map(float, i) for i in objects])

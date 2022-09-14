@@ -31,7 +31,7 @@ class DataPlatformReader(object):
 
     def get_obj_info_by_label_id(self, label_id):
         search_query = (
-            'SELECT cx,cy,width,height,angle,label_code_id,scene_id'
+            'SELECT cx,cy,width,height,angle,label_code_id,scene_id '
             'from data_platform.tbl_sia_labels WHERE ')
         condition_query = f"id='{label_id}'"
         tot_query = search_query + condition_query

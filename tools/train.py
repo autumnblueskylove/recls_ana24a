@@ -3,6 +3,7 @@ import argparse
 import copy
 import os
 import os.path as osp
+import shutil
 import time
 import warnings
 
@@ -140,7 +141,8 @@ def main():
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
     root, extension = os.path.splitext(args.config)
-    cfg.dump(osp.join(cfg.work_dir, 'model_config' + extension))
+    shutil.copyfile(args.config,
+                    osp.join(cfg.work_dir, 'model_config' + extension))
     # init the logger before other steps
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
