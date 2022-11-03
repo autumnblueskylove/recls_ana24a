@@ -8,18 +8,17 @@ from mmcv.runner.hooks.logger import LoggerHook
 @HOOKS.register_module(force=True)
 class MlflowLoggerHook(LoggerHook):
 
-    def __init__(
-        self,
-        exp_name=None,
-        run_name=None,
-        tags=None,
-        log_model=True,
-        interval=10,
-        ignore_last=True,
-        reset_flag=False,
-        run_id=None,
-        by_epoch=True,
-    ):
+    def __init__(self,
+                 exp_name=None,
+                 run_name=None,
+                 tags=None,
+                 log_model=True,
+                 interval=10,
+                 ignore_last=True,
+                 reset_flag=False,
+                 run_id=None,
+                 by_epoch=True,
+                 config_name=None):
         """Class to log metrics and (optionally) a trained model to MLflow.
         It requires `MLflow`_ to be installed.
         Args:
@@ -51,6 +50,7 @@ class MlflowLoggerHook(LoggerHook):
         self.tags = tags
         self.log_model = log_model
         self.run_id = run_id
+        self.config_name = config_name
 
     def _has_tracking_uri(self):
         return 'file://' not in self.mlflow.get_tracking_uri()
@@ -99,7 +99,10 @@ class MlflowLoggerHook(LoggerHook):
         if not bool(runner.work_dir) or not self._has_tracking_uri():
             return
 
-        artifact_lists = ['model_config.py', 'model_final.pth']
+        log_name = f'{runner.timestamp}.log'
+        artifact_lists = [
+            'model_config.py', 'model_final.pth', log_name, self.config_name
+        ]
         for artifact_list in artifact_lists:
             self.mlflow.log_artifact(
                 os.path.join(runner.work_dir, artifact_list),

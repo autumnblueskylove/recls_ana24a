@@ -1,4 +1,5 @@
 -i https://pypi.sia-service.kr/simple/
+dp-client
 psycopg2-binary
 pymongo
 pytest

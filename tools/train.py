@@ -99,10 +99,27 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
-    if args.options is not None:
-        cfg.merge_from_dict(args.options)
-        run_id = args.options.get('run_id', None)
-        cfg.log_config.hooks[-1].run_id = run_id
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
+
+        # set mlflow options
+        run_id = args.cfg_options.get('run_id', None)
+        exp_name = args.cfg_options.get('exp_name', None)
+        run_name = args.cfg_options.get('run_name', None)
+        for hook in cfg.log_config.hooks:
+            if hook.type == 'MlflowLoggerHook':
+                hook.run_id = run_id if run_id else hook.run_id
+                hook.exp_name = exp_name if exp_name else hook.exp_name
+                hook.run_name = run_name if run_name else hook.run_name
+                hook.config_name = osp.basename(args.config)
+
+        # set DataPlatform
+        dp_user = args.cfg_options.get('dp_user', None)
+        dp_password = args.cfg_options.get('dp_password', None)
+        for data in [cfg.data.train, cfg.data.val, cfg.data.test]:
+            if data.type == 'DataPlatformDatasetV2':
+                data.user = dp_user if dp_user else data.user
+                data.password = dp_password if dp_password else data.password
 
     # set multi-process settings
     setup_multi_processes(cfg)
@@ -141,8 +158,9 @@ def main():
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
     root, extension = os.path.splitext(args.config)
+    cfg.dump(osp.join(cfg.work_dir, 'model_config' + extension))
     shutil.copyfile(args.config,
-                    osp.join(cfg.work_dir, 'model_config' + extension))
+                    osp.join(cfg.work_dir, osp.basename(args.config)))
     # init the logger before other steps
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, f'{timestamp}.log')

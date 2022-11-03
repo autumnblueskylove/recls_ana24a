@@ -1,6 +1,7 @@
 import copy
 import math
 import os
+from typing import List
 
 import mmcv
 import numpy as np
@@ -8,11 +9,41 @@ import numpy as np
 from mmcls.datasets.builder import PIPELINES
 
 
+def read_as_array(scene,
+                  xoff: int,
+                  yoff: int,
+                  xsize: int,
+                  ysize: int,
+                  channels: List[int] = None) -> np.ndarray:
+    """Read array from gdal.Dataset with specified channels.
+
+    If not channels, set default values [0, 1, 2]
+    Args:
+        scene (gdal.Dataset): raster of gdal.Dataset
+        xoff (int): start x
+        yoff (int): start y
+        xsize (int): width
+        ysize (int): height
+        channels (List[int]): channels to read array
+    """
+    if channels is None:
+        channels = [0, 1, 2]
+
+    img = scene.ReadAsArray(xoff, yoff, xsize, ysize)
+    if img.ndim == 3:
+        img = np.array([img[ch] for ch in channels])
+    else:  # to support a single band image
+        img = np.array([img for _ in range(len(channels))])
+
+    # change shape from ch, h, w to h, w, ch
+    img = img.transpose((1, 2, 0))
+    return img
+
+
 @PIPELINES.register_module()
 class CropInstance:
 
     def __init__(self, expand_ratio=1.0):
-
         assert isinstance(expand_ratio, float)
 
         self.expand_ratio = expand_ratio
@@ -49,6 +80,97 @@ class CropInstance:
 
 
 @PIPELINES.register_module()
+class CropInstanceInScene(CropInstance):
+    """Load, crop and align instance(label such as rbox) in scene(image).
+    Args:
+        expand_ratio (float): Crop size is width * expand_ratio,
+            height * expand_ratio
+            defaults to 1.0
+        rot_dir (str): Rotation direction of instance
+            defaults to 'ccw'
+    """
+
+    def __init__(self, expand_ratio: float = 1.0, rot_dir: str = 'cw'):
+        assert rot_dir in ['ccw', 'cw'],\
+            f'rot_dir({rot_dir}) should be ccw or cw'
+
+        self.rot_dir = rot_dir
+        super(CropInstanceInScene, self).__init__(expand_ratio)
+
+    def __call__(self, results):
+        """
+        Args:
+            results (dict): Result dict from loading pipeline and to be used
+                below.
+                - results['image_info']['filename'] to open image
+                - results['image_info']['coordinate'] to get label
+        Return:
+            dict: Added or update results to 'img'
+        """
+        from osgeo import gdal
+
+        scene = gdal.Open(results['img_info']['filename'])
+        rbox = results['img_info']['coordinate']
+        crop_bbox = self.get_crop_bbox(rbox)
+
+        # check and fix crop bbox that is in scene.
+        valid_crop_bbox = [
+            crop_bbox[0] if crop_bbox[0] > 0 else 0,
+            crop_bbox[1] if crop_bbox[1] > 0 else 0, crop_bbox[2]
+            if crop_bbox[2] < scene.RasterXSize else scene.RasterXSize,
+            crop_bbox[3]
+            if crop_bbox[3] < scene.RasterYSize else scene.RasterYSize
+        ]
+
+        img = read_as_array(scene, valid_crop_bbox[0], valid_crop_bbox[1],
+                            valid_crop_bbox[2] - valid_crop_bbox[0],
+                            valid_crop_bbox[3] - valid_crop_bbox[1])
+
+        # if crop bbox is not in scene, fix image by zero padding
+        if valid_crop_bbox != crop_bbox:
+            img = np.pad(
+                img, ((valid_crop_bbox[1] - crop_bbox[1],
+                       crop_bbox[3] - valid_crop_bbox[3]),
+                      (valid_crop_bbox[0] - crop_bbox[0],
+                       crop_bbox[2] - valid_crop_bbox[2]), (0, 0)),
+                mode='constant')
+
+        center_x, center_y = img.shape[1] // 2, img.shape[0] // 2
+        rad = rbox[-1] if self.rot_dir == 'cw' else -rbox[-1]
+        img = self.rotate(img, rad, center=(center_x, center_y))
+        img = self.crop(img, center_x, center_y, rbox[2], rbox[3])
+
+        results['img'] = img
+        return results
+
+    def get_crop_bbox(self, rbox: List[float]):
+        """Get crop region for rotated instance.
+
+        Args:
+            rbox (List[float)]: cx, cy, width, height, radian
+        """
+        MARGIN_RATIO = 0.1  # TODO why? for rotation?
+
+        x, y, w, h, rad = rbox
+        cosa = math.cos(rad)
+        sina = math.sin(rad)
+        bbox_w = abs(cosa * w) + abs(sina * h)
+        bbox_h = abs(sina * w) + abs(cosa * h)
+        bbox_w *= (self.expand_ratio + MARGIN_RATIO)
+        bbox_h *= (self.expand_ratio + MARGIN_RATIO)
+
+        # for handling variable size by rotation
+        crop_size = bbox_w if bbox_w > bbox_h else bbox_h
+
+        xmin = round(x - crop_size / 2)
+        ymin = round(y - crop_size / 2)
+        xmax = round(x + crop_size / 2)
+        ymax = round(y + crop_size / 2)
+
+        return [xmin, ymin, xmax, ymax]
+
+
+@PIPELINES.register_module()
 class ConvertSceneToPatch:
 
     def __init__(self, patch_size=(512, 512)):
@@ -64,7 +186,6 @@ class ConvertSceneToPatch:
         return (patch_height, patch_width)
 
     def make_patch(self, filename, coordinate):
-
         from osgeo import gdal
         src = gdal.Open(filename)
         scene_width, scene_height = src.RasterXSize, src.RasterYSize
@@ -77,16 +198,9 @@ class ConvertSceneToPatch:
         crop_h_start = max(0, y - self.patch_size[0] / 2)
         crop_h_end = min(scene_height, y + self.patch_size[0] / 2)
 
-        patch = src.ReadAsArray(
-            int(crop_w_start), int(crop_h_start),
-            int(crop_w_end) - int(crop_w_start),
-            int(crop_h_end) - int(crop_h_start))
-
-        if patch.ndim == 2:
-            patch = np.array([patch for _ in range(3)])
-        patch = patch.transpose((1, 2, 0))
-        # TODO: temporary slicing sensor
-        patch = patch[:, :, :3]
+        patch = read_as_array(src, int(crop_w_start), int(crop_w_end),
+                              int(crop_w_end) - int(crop_w_start),
+                              int(crop_h_end) - int(crop_h_start))
 
         insert_h = int(self.patch_size[0] - (crop_h_end - crop_h_start))
         insert_w = int(self.patch_size[1] - (crop_w_end - crop_w_start))
@@ -97,7 +211,6 @@ class ConvertSceneToPatch:
         return pad_img
 
     def __call__(self, results):
-
         coordinate = results['img_info']['coordinate']
         scene_coordinate = copy.deepcopy(coordinate)
         results['img_info']['scene_coordinate'] = scene_coordinate
