@@ -38,10 +38,12 @@ class Classifier:
         infer_cfg = cfg.get('scene_test_dataset', dict())
         test_pipeline = infer_cfg.get('pipeline', cfg.data.val.get('pipeline'))
 
-        if test_pipeline[0].type != 'ConvertSceneToPatch':
+        valid_modules = ['ConvertSceneToPatch', 'CropInstanceInScene']
+
+        if test_pipeline[0].type not in valid_modules:
             raise RuntimeError(
-                'First test pipeline should be `ConvertSceneToPatch`, '
-                'and followed by pipelines such as `RandomStRetch and '
+                f'First test pipeline should be one of {valid_modules}, '
+                'and followed by pipelines such as `RandomStretch and '
                 '`CropInstance`')
 
         self.test_pipeline = Compose(test_pipeline)
