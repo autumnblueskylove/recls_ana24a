@@ -13,9 +13,11 @@ import mmcv
 import numpy as np
 from mmcv import Config, DictAction, ProgressBar
 
+import recls  # noqa: F401
 from mmcls.core import visualization as vis
 from mmcls.datasets.builder import PIPELINES, build_dataset, build_from_cfg
 from mmcls.models.utils import to_2tuple
+from recls.datasets.pipelines.transform_utils import stretch_image
 
 # text style
 bright_style, reset_style = '\x1b[1m', '\x1b[0m'
@@ -129,13 +131,20 @@ def retrieve_data_cfg(config_path, skip_type, cfg_options, phase):
     cfg = Config.fromfile(config_path)
     if cfg_options is not None:
         cfg.merge_from_dict(cfg_options)
+
+        dp_user = cfg_options.get('dp_user', None)
+        dp_password = cfg_options.get('dp_password', None)
+        for data in [cfg.data.train, cfg.data.val, cfg.data.test]:
+            if data.type == 'DataPlatformDatasetV2':
+                data.user = dp_user if dp_user else data.user
+                data.password = dp_password if dp_password else data.password
+
     data_cfg = cfg.data[phase]
     while 'dataset' in data_cfg:
         data_cfg = data_cfg['dataset']
     data_cfg['pipeline'] = [
         x for x in data_cfg.pipeline if x['type'] not in skip_type
     ]
-
     return cfg
 
 
@@ -148,7 +157,11 @@ def build_dataset_pipelines(cfg, phase):
     data_cfg = cfg.data[phase]
     loadimage_pipeline = []
     if len(data_cfg.pipeline
-           ) != 0 and data_cfg.pipeline[0]['type'] == 'LoadImageFromFile':
+           ) != 0 and data_cfg.pipeline[0]['type'] == 'RandomRBox':
+        loadimage_pipeline.append(data_cfg.pipeline.pop(0))
+    if len(data_cfg.pipeline) != 0 and (
+            data_cfg.pipeline[0]['type'] == 'LoadImageFromFile'
+            or data_cfg.pipeline[0]['type'] == 'CropInstanceInScene'):
         loadimage_pipeline.append(data_cfg.pipeline.pop(0))
     origin_pipeline = data_cfg.pipeline
     data_cfg.pipeline = loadimage_pipeline
@@ -266,6 +279,8 @@ def get_display_img(args, item, pipelines):
     if args.bgr2rgb:
         item['img'] = mmcv.bgr2rgb(item['img'])
     src_image = item['img'].copy()
+    if src_image.dtype != np.uint8:
+        src_image = stretch_image(src_image, 255, 0, 100).astype('uint8')
     pipeline_images = [src_image]
 
     # get intermediate images through pipelines
@@ -328,7 +343,7 @@ def main():
             progressBar.update()
 
             if ret == 1:
-                print('\nMannualy interrupted.')
+                print('\nManually interrupted.')
                 break
 
 

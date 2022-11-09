@@ -78,3 +78,17 @@ python3 tools/train.py $CONFIG_PATH --work-dir $WORK_PATH  \
   --cfg-options exp_name=$EXP_NAME run_name=$CONFIG_NAME dp_user=$DP_USER dp_password=$DP_PASSWORD
 
 ```
+
+______________________________________________________________________
+
+# Useful Tools
+
+### Visualizing Pipeline
+
+- Refer to [mmclassification](https://mmclassification.readthedocs.io/en/master/tools/visualization.html)
+- Support DataPlatformV2
+  - ```
+    python3 tools/visualizations/vis_pipeline.py \
+        CONFIGPATH, --output-dir OUTPUTDIR --number NUMBER \
+        --cfg-options dp_user=DP_USER dp_password=DP_PASSWORD
+    ```
