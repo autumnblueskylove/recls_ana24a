@@ -73,9 +73,7 @@ class DataPlatformDatasetV2(BaseDataset):
                             filename,
                             'coordinate': [
                                 label['x'], label['y'], label['width'],
-                                label['height'], -label['rotate_angle']
-                                # temporarily CCW -> CW to support results of
-                                # detection
+                                label['height'], label['rotate_angle']
                             ]
                         },
                         'gt_label':
