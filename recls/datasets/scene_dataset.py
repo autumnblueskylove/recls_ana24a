@@ -1,15 +1,13 @@
 import copy
 import csv
+import json
 import os
 
-from torch.utils.data import Dataset
-
-from mmcls.datasets import DATASETS
-from mmcls.datasets.pipelines import Compose
+from mmcls.datasets import DATASETS, BaseDataset
 
 
 @DATASETS.register_module()
-class SceneDataset(Dataset):
+class SceneDataset(BaseDataset):
     """Dataset to inference a large image.
 
     The dataset loads scene image, crop the image to smaller patches, and
@@ -27,6 +25,7 @@ class SceneDataset(Dataset):
         self,
         path,
         pipeline,
+        classes=None,
         objects=None,
         object_file='',
     ):
@@ -35,8 +34,19 @@ class SceneDataset(Dataset):
                 'Either object file or objects should be exist!')
         elif os.path.exists(object_file):
             with open(object_file) as f:
-                objects = list(csv.reader(f))
-                self.objects = list([map(float, i) for i in objects])
+                if object_file.endswith('.csv'):
+                    objects = list(csv.reader(f))
+                    self.objects = list([map(float, i) for i in objects])
+                elif object_file.endswith('.geojson'):
+                    objects = []
+                    json_object = json.load(f)
+                    for feat in json_object['features']:
+                        prop_rbox = feat['properties']['rbox']
+                        objects.append([
+                            prop_rbox['cx'], prop_rbox['cy'], prop_rbox['w'],
+                            prop_rbox['h'], prop_rbox['rad']
+                        ])
+                    self.objects = objects
         else:
             self.objects = objects
 
@@ -48,8 +58,7 @@ class SceneDataset(Dataset):
 
         self.data_infos = self.load_annotations()
 
-        # processing pipeline
-        self.pipeline = Compose(pipeline)
+        super(SceneDataset, self).__init__('', pipeline, classes=classes)
 
     @property
     def shape(self):

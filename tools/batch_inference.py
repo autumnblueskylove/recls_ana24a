@@ -42,6 +42,10 @@ def parse_args():
         help='path to input image dirs or files. if no path is given, '
         'it will use `cfg.scene_test_dataset.image_paths` values.')
     parser.add_argument(
+        '--object-path',
+        type=str,
+        help='path to input objects such as geojson by detection results')
+    parser.add_argument(
         '--run-id', type=str, default=None, help='mlflow run id')
     parser.add_argument(
         '--save-path',
@@ -60,6 +64,9 @@ def parse_args():
 
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
+
+    if args.save_path:
+        os.makedirs(args.save_path, exist_ok=True)
 
     if args.run_id:
         print('Downloading config and checkpoint from mlflow...')
@@ -126,7 +133,6 @@ def parse_scenes(paths):
 
 
 def main():
-
     args = parse_args()
     model = Classifier(os.path.dirname(args.config))
     cfg = model.cfg
@@ -144,7 +150,11 @@ def main():
         args.path or cfg.get('scene_test_dataset').image_paths)
     for file in track_iter_progress(files[rank::world_size]):
 
-        inference_classifier_with_scene(model, file, output_dir=args.save_path)
+        inference_classifier_with_scene(
+            model,
+            file,
+            object_file=args.object_path,
+            output_dir=args.save_path)
 
         if args.run_id and args.save_mlflow:
             cli = MlflowClient()

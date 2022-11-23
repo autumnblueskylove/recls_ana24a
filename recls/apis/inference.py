@@ -1,3 +1,6 @@
+import os.path as osp
+
+import geopandas as gpd
 import numpy as np
 import torch
 from mmcv.utils import track_iter_progress
@@ -9,6 +12,7 @@ from recls.datasets import SceneDataset
 def inference_classifier_with_scene(model,
                                     scene_path,
                                     objects=None,
+                                    object_file=None,
                                     output_dir='inference'):
     """inference patches with the classifier.
 
@@ -26,15 +30,14 @@ def inference_classifier_with_scene(model,
     cfg = model.cfg.copy()
 
     infer_cfg = cfg.get('scene_test_dataset')
-    infer_pipeline = infer_cfg.get('pipeline', cfg.data.val.get('pipeline'))
+    if infer_cfg:
+        infer_pipeline = infer_cfg.get('pipeline',
+                                       cfg.data.val.get('pipeline'))
+    else:
+        infer_pipeline = cfg.data.val.get('pipeline')
 
-    object_file = infer_cfg.get('object_file', '')
-
-    if infer_pipeline[0].type != 'ConvertSceneToPatch':
-        raise RuntimeError(
-            'First test pipeline should be `ConvertSceneToPatch`, '
-            'and followed by pipelines such as `RandomStRetch and '
-            '`CropInstance`')
+    object_file = object_file if object_file else infer_cfg.get(
+        'object_file', '')
 
     dataset = SceneDataset(
         scene_path,
@@ -58,5 +61,13 @@ def inference_classifier_with_scene(model,
             pred_results.append(pred_result)
 
     pred_results = np.concatenate(pred_results)
+
+    # appended classes of prediction to object file and save it to output dir
+    if object_file and output_dir:
+        dst_path = osp.join(output_dir, osp.basename(object_file))
+        pred_gdf = gpd.read_file(object_file)
+        pred_classes = np.argmax(pred_results, axis=-1)
+        pred_gdf['pred_classes'] = pred_classes
+        pred_gdf.to_file(dst_path)
 
     return pred_results
