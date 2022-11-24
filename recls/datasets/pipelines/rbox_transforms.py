@@ -198,7 +198,7 @@ class ConvertSceneToPatch:
         crop_h_start = max(0, y - self.patch_size[0] / 2)
         crop_h_end = min(scene_height, y + self.patch_size[0] / 2)
 
-        patch = read_as_array(src, int(crop_w_start), int(crop_w_end),
+        patch = read_as_array(src, int(crop_w_start), int(crop_h_start),
                               int(crop_w_end) - int(crop_w_start),
                               int(crop_h_end) - int(crop_h_start))
 
