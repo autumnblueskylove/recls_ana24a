@@ -3,6 +3,8 @@ import os
 import numpy as np
 from tqdm import tqdm
 
+from mmcls.core.evaluation import calculate_confusion_matrix
+from mmcls.models.losses import accuracy
 from recls.datasets.geococo import GeoCOCODataset
 
 
@@ -45,37 +47,27 @@ def filter_by_key(keys, value):
         return False, None
 
 
-def evaluate_per_class(results):
+def evaluate_per_class(results, categories=None):
 
     logits = np.array([result['result'] for result in results])
+    target = np.array([result['label'] for result in results])
+
     assert len(logits.shape) == 2
     num_classes = logits.shape[1]
-    topk = get_topk(num_classes)
 
-    class_map = {str(i): list() for i in range(num_classes)}
+    total_acc = accuracy(logits, target)
 
-    for result in tqdm(results):
-        logit = result['result']
-        label = result['label']
+    metrics = [{'evaluation/00.Top-1 Acc': total_acc}]
 
-        include, key = filter_by_key(list(class_map.keys()), [str(label)])
-        if include:
-            class_map[key].append(dict(
-                gt_label=label,
-                logit=logit,
-            ))
+    confusion_matrix = calculate_confusion_matrix(logits, target).numpy()
+    top1_acc = confusion_matrix.diagonal() / np.bincount(target) * 100.
 
-    metrics = list()
-    for key in class_map.keys():
-        if len(class_map[key]) == 0:
-            continue
-        metric = EvalMetrics(
-            infos=class_map[key],
-            topk=topk,
-            add_key=os.path.join('class', key),
-        ).get_metric()
-        metrics.append(metric)
-    return metrics
+    metrics += [{
+        f'evaluation/{str(i+1).zfill(2)}.{categories[i]}': top1_acc[i]
+        for i in range(num_classes)
+    }]
+
+    return metrics, confusion_matrix
 
 
 def evaluate_per_sensor(results):
@@ -121,6 +113,7 @@ def evaluate_per_sensor(results):
             infos=sensor_map[key],
             topk=topk,
             add_key=os.path.join('sensor', key),
+            metric=['accuracy'],
         ).get_metric()
         metrics.append(metric)
 
@@ -131,6 +124,7 @@ def evaluate_per_sensor(results):
             infos=etc_map[key],
             topk=topk,
             add_key=os.path.join('sensor', key),
+            metric=['accuracy'],
         ).get_metric()
         metrics.append(metric)
 

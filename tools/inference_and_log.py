@@ -30,7 +30,7 @@ def parse_args():
     )
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--run-id', type=str)
-    parser.add_argument('--artifact-path', type=str)
+    parser.add_argument('--artifact-path', type=str, default='checkpoint')
     parser.add_argument('--local-path', type=str, default='ckpt')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:

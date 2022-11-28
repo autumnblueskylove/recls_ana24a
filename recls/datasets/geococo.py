@@ -161,11 +161,11 @@ class GeoCOCODataset(BaseDataset):
                 acc = accuracy_metric(results, gt_labels, topk=topk)
             if isinstance(topk, tuple):
                 eval_results_ = {
-                    f'{average_mode}_accuracy_top-{k}': a
+                    f'accuracy_top-{k}': a
                     for k, a in zip(topk, acc)
                 }
             else:
-                eval_results_ = {f'{average_mode}_accuracy': acc}
+                eval_results_ = {'accuracy': acc}
             if isinstance(thrs, tuple):
                 for key, values in eval_results_.items():
                     eval_results.update({
