@@ -149,12 +149,19 @@ def main():
     files = parse_scenes(
         args.path or cfg.get('scene_test_dataset').image_paths)
     for file in track_iter_progress(files[rank::world_size]):
+        object_file = None
+        if os.path.isdir(args.object_path):
+            filename = os.path.basename(file).split('.')[0]
+            for paths, _, roots in os.walk(args.object_path):
+                for r in roots:
+                    if filename in r:
+                        object_file = os.path.join(paths, r)
+                        break
+        else:
+            object_file = args.object_path
 
         inference_classifier_with_scene(
-            model,
-            file,
-            object_file=args.object_path,
-            output_dir=args.save_path)
+            model, file, object_file=object_file, output_dir=args.save_path)
 
         if args.run_id and args.save_mlflow:
             cli = MlflowClient()

@@ -41,11 +41,13 @@ class SceneDataset(BaseDataset):
                     objects = []
                     json_object = json.load(f)
                     for feat in json_object['features']:
-                        prop_rbox = feat['properties']['rbox']
-                        objects.append([
-                            prop_rbox['cx'], prop_rbox['cy'], prop_rbox['w'],
-                            prop_rbox['h'], prop_rbox['rad']
-                        ])
+                        if feat['properties']['rbox'] is not None:
+                            prop_rbox = feat['properties']['rbox']
+                            objects.append([
+                                prop_rbox['cx'], prop_rbox['cy'],
+                                prop_rbox['w'], prop_rbox['h'],
+                                prop_rbox['rad']
+                            ])
                     self.objects = objects
         else:
             self.objects = objects

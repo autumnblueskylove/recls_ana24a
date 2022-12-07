@@ -66,8 +66,40 @@ def inference_classifier_with_scene(model,
     if object_file and output_dir:
         dst_path = osp.join(output_dir, osp.basename(object_file))
         pred_gdf = gpd.read_file(object_file)
-        pred_classes = np.argmax(pred_results, axis=-1)
-        pred_gdf['pred_classes'] = pred_classes
+        pred_gdf = pred_gdf.drop(
+            index=pred_gdf[pred_gdf['rbox'].isna()].index).reset_index()
+        pred_gdf = pred_gdf.drop(['index'], axis='columns')
+
+        pred_class_id = np.argmax(pred_results, axis=-1)
+
+        categories = cfg.data.test.categories
+        categories = {cat['id']: cat['name'] for cat in categories}
+        if cfg.data.test.rename_class:
+            categories_rename = cfg.data.test.rename_class
+        else:
+            categories_rename = None
+
+        pred_class_name = []
+        matched_type_cls = []
+        for k, pid in enumerate(pred_class_id):
+            pred_name = categories[pid]
+            pred_class_name.append(pred_name)
+
+            if pred_gdf['matched_type_det'][k] in ['TP', 'FN']:
+                class_rename = categories_rename[
+                    pred_gdf['class_name']
+                    [k]] if categories_rename else pred_name
+                if pred_name == class_rename:
+                    matched_type_cls.append('TP')
+                else:
+                    matched_type_cls.append('FP')
+            elif pred_gdf['matched_type_det'][k] in ['FP']:
+                matched_type_cls.append('FP')
+
+        pred_gdf['pred_class_id'] = pred_class_id
+        pred_gdf['pred_class_name'] = pred_class_name
+        pred_gdf['matched_type_cls'] = matched_type_cls
+        pred_gdf['cls_score'] = np.max(pred_results, axis=-1)
         pred_gdf.to_file(dst_path)
 
     return pred_results
