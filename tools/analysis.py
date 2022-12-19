@@ -146,7 +146,8 @@ def main():
     categories = cfg.get('categories')
 
     if categories:
-        categories = [i['name'] for i in categories]
+        categories = [i['id'] for i in categories]
+        categories = list(set(categories))
 
     class_metrics, confusion_mat = evaluate_per_class(result, categories)
     os.makedirs(INFER_DIR, exist_ok=True)

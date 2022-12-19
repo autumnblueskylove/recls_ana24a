@@ -60,10 +60,11 @@ def evaluate_per_class(results, categories=None):
     metrics = [{'evaluation/00.Top-1 Acc': total_acc}]
 
     confusion_matrix = calculate_confusion_matrix(logits, target).numpy()
-    top1_acc = confusion_matrix.diagonal() / np.bincount(target) * 100.
+    top1_acc = confusion_matrix.diagonal() / np.bincount(
+        target, minlength=num_classes) * 100.
 
     metrics += [{
-        f'evaluation/{str(i+1).zfill(2)}.{categories[i]}': top1_acc[i]
+        f'evaluation/{str(i + 1).zfill(2)}.{categories[i]}': top1_acc[i]
         for i in range(num_classes)
     }]
 
