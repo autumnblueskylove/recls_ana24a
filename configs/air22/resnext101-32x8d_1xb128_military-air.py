@@ -5,7 +5,7 @@ _base_ = [
     '../_base_/default_runtime.py',
 ]
 
-model = dict(head=dict(num_classes=25))
+model = dict(head=dict(num_classes=24))
 
 load_from = 'https://download.openmmlab.com/mmclassification/v0/resnext/' \
             'resnext101_32x8d_b32x8_imagenet_20210506-23a247d5.pth'

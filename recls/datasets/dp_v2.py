@@ -43,9 +43,18 @@ class DataPlatformDatasetV2(BaseDataset):
         **kwargs (dict): for BaseDataset
     """
 
-    def __init__(self, dataset_id: int, categories: List[dict],
-                 pipeline: List[dict], host: str, user: str, password: str,
-                 rename_class: List[str], **kwargs: dict):
+    def __init__(self,
+                 dataset_id: int,
+                 categories: List[dict],
+                 pipeline: List[dict],
+                 host: str,
+                 user: str,
+                 password: str,
+                 rename_class=None,
+                 **kwargs: dict):
+        if rename_class is None:
+            rename_class = {}
+
         self.dataset_id = dataset_id
         self.rename_class = rename_class
         self.dp_client = get_connection(host, user, password)
