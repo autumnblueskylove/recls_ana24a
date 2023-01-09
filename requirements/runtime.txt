@@ -1,6 +1,7 @@
 -i https://pypi.sia-service.kr/simple/
 boto3
 einops
+geopandas
 mlflow
 mmcls==0.23.1
 pygeococotools>=1.1.1
