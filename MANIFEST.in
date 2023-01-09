@@ -1,2 +1,4 @@
 include requirements/*.txt
 include recls/VERSION
+recursive-include recls/.mim/configs *.py *.yml
+recursive-include recls/.mim/tools *.py *.sh
