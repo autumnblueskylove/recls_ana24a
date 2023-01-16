@@ -11,16 +11,19 @@ from mmcls.datasets.pipelines import Compose
 
 class Classifier:
 
-    def __init__(self, model_path: str, device='cuda:0'):
+    def __init__(self, model_path: str, device='cuda:0', weight_file=None):
         """Base class for detector.
 
         Args:
             model_path (str): path containing the config and weight.
             device (str, optional): device to allocate the model.
                 Defaults to 'cuda:0'.
+            weight_file (str): path for custom weight file.
+                Defaults to None.
         """
         super().__init__()
         self._model_root = model_path
+        self.weight_file = weight_file
         self.device = device
 
         self._setup()
@@ -68,7 +71,10 @@ class Classifier:
 
     @property
     def weight_path(self) -> str:
-        return os.path.join(self._model_root, 'model_final.pth')
+        if self.weight_file is None:
+            return os.path.join(self._model_root, 'model_final.pth')
+        else:
+            return self.weight_file
 
     def preprocess(self, imgs) -> dict:
         """Preprocess the image.
@@ -117,11 +123,14 @@ class Classifier:
 
         return data
 
-    def process(self, data: DataContainer) -> List[List[np.ndarray]]:
+    def process(self,
+                data: DataContainer,
+                return_logit=False) -> List[List[np.ndarray]]:
         """Feed images to the detector.
 
         Args:
             data (DataContainer): input data.
+            return_logit (bool): Return logit without softmax
         Returns:
             List[List[np.ndarray]]: [batch_size, num_classes, pred_rbbox]
                 where pred_rbbox is [num_pred, 6] with
@@ -129,7 +138,9 @@ class Classifier:
         """
 
         with torch.no_grad():
-            results = self.model(return_loss=False, **data)
+            use_softmax = not return_logit
+            results = self.model(
+                return_loss=False, softmax=use_softmax, **data)
         return results
 
     def postprocess(

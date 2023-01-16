@@ -60,6 +60,10 @@ def parse_args():
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--tmpdir', type=str, default='.batch_inference')
+    parser.add_argument(
+        '--energy-score',
+        action='store_true',
+        help='If save energy score with softmax score')
     args = parser.parse_args()
 
     if 'LOCAL_RANK' not in os.environ:
@@ -134,7 +138,8 @@ def parse_scenes(paths):
 
 def main():
     args = parse_args()
-    model = Classifier(os.path.dirname(args.config))
+    model = Classifier(
+        os.path.dirname(args.config), weight_file=args.checkpoint)
     cfg = model.cfg
 
     setup_multi_processes(cfg)
@@ -161,7 +166,11 @@ def main():
             object_file = args.object_path
 
         inference_classifier_with_scene(
-            model, file, object_file=object_file, output_dir=args.save_path)
+            model,
+            file,
+            object_file=object_file,
+            output_dir=args.save_path,
+            energy_score=args.energy_score)
 
         if args.run_id and args.save_mlflow:
             cli = MlflowClient()

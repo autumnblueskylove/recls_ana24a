@@ -4,6 +4,7 @@ import geopandas as gpd
 import numpy as np
 import torch
 from mmcv.utils import track_iter_progress
+from scipy.special import logsumexp, softmax
 
 from mmcls.datasets import build_dataloader
 from recls.datasets import SceneDataset
@@ -13,6 +14,7 @@ def inference_classifier_with_scene(model,
                                     scene_path,
                                     objects=None,
                                     object_file=None,
+                                    energy_score=False,
                                     output_dir='inference'):
     """inference patches with the classifier.
 
@@ -57,10 +59,13 @@ def inference_classifier_with_scene(model,
 
         with torch.no_grad():
 
-            pred_result = model.process(data)
+            pred_result = model.process(data, return_logit=energy_score)
             pred_results.append(pred_result)
 
     pred_results = np.concatenate(pred_results)
+
+    if energy_score:
+        energys, softmaxs = calucate_energy_scores(pred_results)
 
     # appended classes of prediction to object file and save it to output dir
     if object_file and output_dir:
@@ -100,6 +105,22 @@ def inference_classifier_with_scene(model,
         pred_gdf['pred_class_name'] = pred_class_name
         pred_gdf['matched_type_cls'] = matched_type_cls
         pred_gdf['cls_score'] = np.max(pred_results, axis=-1)
+
+        if energy_score:
+            pred_gdf['energy_score'] = energys
+            pred_gdf['softmax_score'] = softmaxs
+
         pred_gdf.to_file(dst_path)
 
     return pred_results
+
+
+def calucate_energy_scores(pred_results, temperature=1.0):
+    # In the definition of the energy-based model, the energy score is
+    # defined as a negative value. To analyze it further, you can use it as
+    # a negative energy score.
+    # For more details, please check https://arxiv.org/abs/2010.03759
+    energys = -(temperature * logsumexp(pred_results / temperature, axis=1))
+    softmaxs = -np.max(softmax(pred_results, axis=1), axis=1)
+
+    return energys, softmaxs
