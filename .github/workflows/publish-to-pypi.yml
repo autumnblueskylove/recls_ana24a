@@ -29,3 +29,15 @@ jobs:
       run: |
         pip3 install twine
         twine upload --repository-url ${{ secrets.PYPI_INDEX_URL }} dist/* -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PW }}
+
+  check-consistency:
+    needs: build-n-publish
+    runs-on: ["self-hosted", "linux", "ubuntu20.04"]
+    steps:
+    - name: trigger-dagrun
+      run: |
+        version=`echo ${{ github.ref_name }} | tr -d "v"`; \
+        curl -X POST ${{ secrets.AIRFLOW_RECLS_UPDATE_DAG_URL }} \
+        --user "${{ secrets.AIRFLOW_USERNAME }}:${{ secrets.AIRFLOW_PASSWORD }}" \
+        -H 'Content-Type: application/json' \
+        -d '{"conf": { "version": "'$version'" }}'
