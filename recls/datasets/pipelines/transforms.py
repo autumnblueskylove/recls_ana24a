@@ -1,10 +1,52 @@
 import random
 
+import mmcv
 import numpy as np
 from PIL import Image, ImageFilter
 
 from mmcls.datasets.builder import PIPELINES
+from mmcls.datasets.pipelines.auto_augment import Rotate, random_negative
 from .transform_utils import stretch_image
+
+
+@PIPELINES.register_module()
+class RandomRotate(Rotate):
+    """Rotate images from range of argument(-angle, angle).
+
+    Args:
+        angle (float): The angle used for rotate. Positive values stand for
+            clockwise rotation.
+        center (tuple[float], optional): Center point (w, h) of the rotation in
+            the source image. If None, the center of the image will be used.
+            Defaults to None.
+        scale (float): Isotropic scale factor. Defaults to 1.0.
+        pad_val (int, Sequence[int]): Pixel pad_val value for constant fill.
+            If a sequence of length 3, it is used to pad_val R, G, B channels
+            respectively. Defaults to 128.
+        prob (float): The probability for performing Rotate therefore should be
+            in range [0, 1]. Defaults to 0.5.
+        random_negative_prob (float): The probability that turns the angle
+            negative, which should be in range [0,1]. Defaults to 0.5.
+        interpolation (str): Interpolation method. Options are 'nearest',
+            'bilinear', 'bicubic', 'area', 'lanczos'. Defaults to 'nearest'.
+    """
+
+    def __call__(self, results):
+        if np.random.rand() > self.prob:
+            return results
+        angle = np.random.uniform(self.angle)
+        angle = random_negative(angle, self.random_negative_prob)
+        for key in results.get('img_fields', ['img']):
+            img = results[key]
+            img_rotated = mmcv.imrotate(
+                img,
+                angle,
+                center=self.center,
+                scale=self.scale,
+                border_value=self.pad_val,
+                interpolation=self.interpolation)
+            results[key] = img_rotated.astype(img.dtype)
+        return results
 
 
 @PIPELINES.register_module()
