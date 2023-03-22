@@ -88,7 +88,9 @@ class DataPlatformDatasetV2(BaseDataset):
                         'gt_label':
                         np.array(
                             self.class_name_to_id[label['class_name']],
-                            dtype=np.int64)
+                            dtype=np.int64),
+                        'label_uuid':
+                        label['ilid']
                     }
                     data_infos.append(info)
         return data_infos

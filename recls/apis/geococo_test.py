@@ -40,6 +40,7 @@ def inference_single_gpu_dp_model(model, data_loader, tmpdir=None):
     filenames = list()
     results = list()
     gt_labels = list()
+    label_uuids = list()
 
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
@@ -66,13 +67,22 @@ def inference_single_gpu_dp_model(model, data_loader, tmpdir=None):
         else:
             gt_labels.append(gt_label)
 
+        if 'label_uuid' in data:
+            label_uuids += list(data['label_uuid'].cpu().numpy())
+        else:
+            label_uuids += [None] * len(gt_label)
+
         batch_size = data['img'].size(0)
         for _ in range(batch_size):
             prog_bar.update()
 
     info_results = [
-        dict(filename=filename, label=label, result=result)
-        for result, filename, label in zip(results, filenames, gt_labels)
+        dict(
+            filename=filename,
+            label=label,
+            result=result,
+            label_uuid=label_uuid) for result, filename, label, label_uuid in
+        zip(results, filenames, gt_labels, label_uuids)
     ]
     return info_results
 

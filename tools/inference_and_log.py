@@ -88,6 +88,8 @@ def main():
     for pipeline in cfg.data.val.pipeline:
         if pipeline['type'] == 'Collect':
             pipeline['keys'].append('gt_label')
+            if cfg.data.val.type == 'DataPlatformDatasetV2':
+                pipeline['keys'].append('label_uuid')
 
     dataset = build_dataset(cfg.data.val)
     dataloader = build_dataloader(
