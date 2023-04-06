@@ -143,11 +143,14 @@ def main():
         result = pickle.load(f)
 
     cfg = Config.fromfile(config_path)
-    categories = cfg.get('categories')
 
-    if categories:
-        categories = [i['id'] for i in categories]
-        categories = list(set(categories))
+    category_map = cfg.get('categories')
+    if category_map:
+        categories = [''] * len(category_map)
+        for category in reversed(category_map):
+            categories[category['id']] = category['name']
+    else:
+        categories = None
 
     class_metrics, confusion_mat = evaluate_per_class(result, categories)
     os.makedirs(INFER_DIR, exist_ok=True)
