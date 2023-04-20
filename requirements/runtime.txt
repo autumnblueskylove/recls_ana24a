@@ -3,7 +3,7 @@ boto3
 einops
 geopandas
 mlflow
-mmcls==0.23.1
+mmcls==0.23.2
 pygeococotools>=1.1.1
 sialibs-dataset
 siavision>=0.1.2
