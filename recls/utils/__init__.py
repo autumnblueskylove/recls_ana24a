@@ -1,3 +1,5 @@
-from .evaluate import evaluate_per_class, evaluate_per_sensor
+from .setup_env import register_all_modules
 
-__all__ = ['evaluate_per_class', 'evaluate_per_sensor']
+__all__ = [
+    'register_all_modules',
+]

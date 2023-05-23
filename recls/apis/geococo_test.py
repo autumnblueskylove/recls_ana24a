@@ -4,7 +4,7 @@ import time
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv.runner import get_dist_info
+from mmengine.dist.utils import get_dist_info
 
 
 def collect_results(result_part):

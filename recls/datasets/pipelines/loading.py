@@ -8,10 +8,10 @@ else:
     IMPORT_GDAL = True
 import numpy as np
 
-from mmcls.datasets.builder import PIPELINES
+from mmpretrain.registry import TRANSFORMS
 
 
-@PIPELINES.register_module()
+@TRANSFORMS.register_module()
 class LoadImageFromMSFile(object):
     """Load an image from multispectral file.
 

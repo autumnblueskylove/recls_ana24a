@@ -1,11 +1,11 @@
 import siavision
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_checkpoint
 from siavision.models import (beit, dla, effnet, hrt, resnest, resnet,
                               rexnetv1, swin_transformer, volo)
 
-from mmcls.models import BACKBONES
-from mmcls.utils import get_root_logger
+from mmpretrain.models import BACKBONES
+from mmengine.logging import MMLogger
 
 SIAVISION_ARCHITECTURE = [
     dla, resnet, resnest, rexnetv1, swin_transformer, effnet, beit, hrt, volo
@@ -51,7 +51,7 @@ class SiavisionModel(nn.Module):
                 Defaults to None.
         """
         if isinstance(pretrained, str):
-            logger = get_root_logger()
+            logger = MMLogger(name='init_logger').get_current_instance()
             load_checkpoint(self, pretrained, strict=False, logger=logger)
         elif pretrained is None:
             return

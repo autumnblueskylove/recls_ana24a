@@ -3,10 +3,10 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
-from mmcv.parallel import DataContainer, MMDataParallel, collate
 
-from mmcls.apis import init_model
-from mmcls.datasets.pipelines import Compose
+from mmpretrain.apis import init_model
+from mmengine.dataset import Compose
+from mmengine.dataset import pseudo_collate
 
 
 class Classifier:
@@ -62,7 +62,8 @@ class Classifier:
         """
         model = init_model(cfg_path, weight_path)
         self.cfg = model.cfg
-        model = MMDataParallel(model, [self.device])
+        # model = MMDataParallel(model, [self.device])
+        model = torch.nn.DataParallel(model).to(self.device)
         return model
 
     @property
@@ -107,7 +108,7 @@ class Classifier:
 
         return datas
 
-    def make_batch(self, imgs) -> DataContainer:
+    def make_batch(self, imgs):
         """Make list of data to batch.
 
         Args:
@@ -115,7 +116,7 @@ class Classifier:
         Returns:
             data (dict of str: DataContainer): batched images.
         """
-        data = collate(imgs, samples_per_gpu=len(imgs))
+        data = pseudo_collate(imgs)
         data['img_metas'] = [
             img_metas.data[0] for img_metas in data['img_metas']
         ]
@@ -124,7 +125,7 @@ class Classifier:
         return data
 
     def process(self,
-                data: DataContainer,
+                data,
                 return_logit=False) -> List[List[np.ndarray]]:
         """Feed images to the detector.
 

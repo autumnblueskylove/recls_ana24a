@@ -3,7 +3,8 @@ import csv
 import json
 import os
 
-from mmcls.datasets import DATASETS, BaseDataset
+from mmpretrain.registry import DATASETS
+from mmpretrain.datasets import BaseDataset
 
 
 @DATASETS.register_module()

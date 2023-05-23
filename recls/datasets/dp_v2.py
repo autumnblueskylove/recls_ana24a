@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 
-from mmcls.datasets.base_dataset import BaseDataset
-from mmcls.datasets.builder import DATASETS
+from mmpretrain.datasets.base_dataset import BaseDataset
+from mmpretrain.datasets.builder import DATASETS
 
 
 def get_connection(host: str, user: str, password: str):

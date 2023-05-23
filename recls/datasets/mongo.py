@@ -1,7 +1,7 @@
 import numpy as np
 
-from mmcls.datasets.builder import DATASETS
-from mmcls.datasets.pipelines import Compose
+from mmpretrain.datasets.builder import DATASETS
+from mmcv.transforms import Compose
 from recls.datasets.api_wrappers import MongoGeoCOCO
 from .geococo import GeoCOCODataset
 

@@ -3,10 +3,10 @@ import os.path as osp
 import geopandas as gpd
 import numpy as np
 import torch
-from mmcv.utils import track_iter_progress
 from scipy.special import logsumexp, softmax
 
-from mmcls.datasets import build_dataloader
+from mmengine import runner
+from mmengine.utils.progressbar import track_iter_progress
 from recls.datasets import SceneDataset
 
 
@@ -52,7 +52,7 @@ def inference_classifier_with_scene(model,
         samples_per_gpu=cfg.data.get('samples_per_gpu', 1))
     loader_cfg.update(cfg.data.get('test_dataloader', {}))
     loader_cfg.update(drop_last=False, shuffle=False, dist=False)
-    dataloader = build_dataloader(dataset, **loader_cfg)
+    dataloader = runner.build_dataloader(dataset, **loader_cfg)
 
     pred_results = []
     for data in track_iter_progress(dataloader):

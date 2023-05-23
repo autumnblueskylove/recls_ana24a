@@ -6,7 +6,7 @@ from typing import List
 import mmcv
 import numpy as np
 
-from mmcls.datasets.builder import PIPELINES
+from mmpretrain.registry import TRANSFORMS
 
 
 def read_as_array(scene,
@@ -40,7 +40,7 @@ def read_as_array(scene,
     return img
 
 
-@PIPELINES.register_module()
+@TRANSFORMS.register_module()
 class CropInstance:
 
     def __init__(self, expand_ratio=1.0):
@@ -79,7 +79,7 @@ class CropInstance:
         return results
 
 
-@PIPELINES.register_module()
+@TRANSFORMS.register_module()
 class CropInstanceInScene(CropInstance):
     """Load, crop and align instance(label such as rbox) in scene(image).
     Args:
@@ -170,7 +170,7 @@ class CropInstanceInScene(CropInstance):
         return [xmin, ymin, xmax, ymax]
 
 
-@PIPELINES.register_module()
+@TRANSFORMS.register_module()
 class ConvertSceneToPatch:
 
     def __init__(self, patch_size=(512, 512)):
@@ -224,7 +224,7 @@ class ConvertSceneToPatch:
         return results
 
 
-@PIPELINES.register_module()
+@TRANSFORMS.register_module()
 class RandomRBox:
 
     def __init__(
