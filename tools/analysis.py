@@ -1,44 +1,51 @@
 import argparse
 import os
-import pickle
+import os.path as osp
+import shutil
 
 import matplotlib.pyplot as plt
-import mlflow
+import mmengine
 import numpy as np
 from matplotlib.ticker import MultipleLocator
-from mmcv import Config
+from mmengine import Config
+from mmengine.evaluator import Evaluator
+from mmpretrain.evaluation import ConfusionMatrix
 
-from recls.utils import evaluate_per_class
+from recls.utils import download_artifacts, log_artifact, log_metrics
 
 INFER_DIR = 'inference'
-PRED_PATH = os.path.join(INFER_DIR, 'result.pkl')
-CONF_PATH = os.path.join(INFER_DIR, 'confusion_matrix.png')
-CONFIG_PATH = 'model_config.py'
+PRED_PATH = os.path.join(INFER_DIR, 'results.pkl')
+CONF_MAT_PATH = os.path.join(INFER_DIR, 'confusion_matrix.png')
+CONFIG_PATH = 'checkpoint/model_config.py'
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run-id')
-    parser.add_argument('--artifact-path', default='checkpoint')
-    parser.add_argument('--local-path', default='ckpt')
+    parser.add_argument('--tmpdir', default='.tmpdir')
     args = parser.parse_args()
     return args
 
 
-def download_artifacts():
+def get_preds_w_gt_from_mlflow(args):
+    download_artifacts(args.run_id, PRED_PATH, args.tmpdir)
+    preds_w_gt = mmengine.load(osp.join(args.tmpdir, PRED_PATH))
+    return preds_w_gt
 
-    args = parse_args()
-    os.makedirs(args.local_path, exist_ok=True)
 
-    client = mlflow.tracking.MlflowClient()
-    download_files = [
-        PRED_PATH,
-        CONFIG_PATH,
-    ]
-    for download_file in download_files:
-        client.download_artifacts(
-            args.run_id, os.path.join(args.artifact_path, download_file),
-            args.local_path)
+def get_categories_from_mlflow(args):
+    download_artifacts(args.run_id, CONFIG_PATH, args.tmpdir)
+    cfg = Config.fromfile(osp.join(args.tmpdir, CONFIG_PATH))
+
+    category_map = cfg.get('categories')
+    if category_map:
+        categories = [''] * len(category_map)
+        for category in reversed(category_map):
+            categories[category['id']] = category['name']
+    else:
+        categories = None
+
+    return categories
 
 
 def plot_confusion_matrix(confusion_matrix,
@@ -52,7 +59,7 @@ def plot_confusion_matrix(confusion_matrix,
     Args:
         confusion_matrix (ndarray): The confusion matrix.
         labels (list[str]): List of class names.
-        save_dir (str|optional): If set, save the confusion matrix plot to the
+        save_path (str|optional): If set, save the confusion matrix plot to the
             given path. Default: None.
         title (str): Title of the plot. Default: `Normalized Confusion Matrix`.
         color_theme (str): Theme of the matrix color map. Default: `plasma`.
@@ -102,7 +109,7 @@ def plot_confusion_matrix(confusion_matrix,
     plt.setp(
         ax.get_xticklabels(), rotation=45, ha='left', rotation_mode='anchor')
 
-    # draw confution matrix value
+    # draw confusion matrix value
     for i in range(num_classes):
         for j in range(num_classes):
             ax.text(
@@ -133,53 +140,44 @@ def plot_confusion_matrix(confusion_matrix,
         plt.savefig(save_path, format='png')
 
 
+def evaluate(preds_w_gt, categories=None):
+    evaluator = Evaluator(ConfusionMatrix())
+    metrics = evaluator.offline_evaluate(preds_w_gt, None)
+
+    cm = metrics['confusion_matrix/result'].numpy()
+    acc_per_cls = cm.diagonal() / cm.sum(axis=1) * 100.
+    metrics = [{'evaluation/00.Top-1 Acc': acc_per_cls.mean()}]
+    metrics += [{
+        f'evaluation/{str(i + 1).zfill(2)}.{categories[i]}': acc_per_cls[i]
+        for i in range(len(categories))
+    }]
+
+    return metrics, cm
+
+
 def main():
-
     args = parse_args()
-    result_path = os.path.join(args.local_path, args.artifact_path, PRED_PATH)
-    config_path = os.path.join(args.local_path, args.artifact_path,
-                               CONFIG_PATH)
-    with open(result_path, 'rb') as f:
-        result = pickle.load(f)
 
-    cfg = Config.fromfile(config_path)
+    # clear tmpdir
+    shutil.rmtree(args.tmpdir, ignore_errors=True)
 
-    category_map = cfg.get('categories')
-    if category_map:
-        categories = [''] * len(category_map)
-        for category in reversed(category_map):
-            categories[category['id']] = category['name']
-    else:
-        categories = None
+    # get preds with gt and categories
+    preds_w_gt = get_preds_w_gt_from_mlflow(args)
+    categories = get_categories_from_mlflow(args)
 
-    class_metrics, confusion_mat = evaluate_per_class(result, categories)
-    os.makedirs(INFER_DIR, exist_ok=True)
+    # metrics
+    metrics, cm = evaluate(preds_w_gt, categories)
+    log_metrics(args.run_id, metrics)
 
+    # plot confusion matrix
+    cm_plot_path = os.path.join(args.tmpdir, CONF_MAT_PATH)
     plot_confusion_matrix(
-        confusion_mat,
+        cm,
         categories,
-        os.path.join(args.local_path, args.artifact_path, CONF_PATH),
+        os.path.join(args.tmpdir, CONF_MAT_PATH),
         show_counts=True)
-
-    client = mlflow.tracking.MlflowClient()
-
-    for metric in class_metrics:
-        for k, v in metric.items():
-            client.log_metric(args.run_id, k, v)
-
-    client.log_artifact(
-        args.run_id,
-        os.path.join(args.local_path, args.artifact_path, CONF_PATH),
-        os.path.join(args.artifact_path, INFER_DIR),
-    )
-
-    # Evaluation according to the sensor type is not required currently.
-    # sensor_metrics = evaluate_per_sensor(result)
-    # for metric in sensor_metrics:
-    #     for k, v in metric.items():
-    #         client.log_metric(args.run_id, k, v)
+    log_artifact(args.run_id, cm_plot_path, INFER_DIR)
 
 
 if __name__ == '__main__':
-    download_artifacts()
     main()

@@ -1,10 +1,7 @@
-from .loading import LoadImageFromMSFile
-from .rbox_transforms import RandomRBox
-from .transforms import GaussianNoise, Identity
+from .processing import (CropInstance, CropInstanceInScene, Identity,
+                         JitterRBox, RandomStretch)
 
 __all__ = [
-    'RandomRBox',
-    'GaussianNoise',
-    'Identity',
-    'LoadImageFromMSFile',
+    'JitterRBox', 'Identity', 'RandomStretch', 'CropInstanceInScene',
+    'CropInstance'
 ]

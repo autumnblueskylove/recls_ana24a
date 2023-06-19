@@ -9,12 +9,13 @@ from mmengine.runner import Runner
 from mmengine.utils import digit_version
 from mmengine.utils.dl_utils import TORCH_VERSION
 
-from recls.utils import register_all_modules
+import recls  # noqa: F403, F401
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a model')
     parser.add_argument('config', help='train config file path')
+    parser.add_argument('--run-id', type=str, help='run id for mlflow')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume',
@@ -65,6 +66,7 @@ def parse_args():
     # will pass the `--local-rank` parameter to `tools/train.py` instead
     # of `--local_rank`.
     parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
+
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -138,21 +140,32 @@ def merge_args(cfg, args):
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
-        # set DataPlatform
-        dp_user = args.cfg_options.get('dp_user', None)
-        dp_password = args.cfg_options.get('dp_password', None)
-        for data in [cfg.data.train, cfg.data.val, cfg.data.test]:
-            if data.type == 'DataPlatformDatasetV2':
-                data.user = dp_user if dp_user else data.user
-                data.password = dp_password if dp_password else data.password
+    # set mlflow
+    for vis in cfg.visualizer.vis_backends:
+        if vis.type == 'MLflowVisBackend':
+            if cfg.get('run_id'):
+                vis.run_id = cfg.get('run_id')
+            if cfg.get('exp_name'):
+                vis.exp_name = cfg.get('exp_name')
+            if cfg.get('run_name'):
+                vis.run_name = cfg.get('run_name')
+
+    # set DataPlatform
+    for dataloader in [
+            cfg.train_dataloader, cfg.val_dataloader, cfg.test_dataloader
+    ]:
+        dataset = dataloader.dataset
+        if dataset.type == 'DataPlatformDataset':
+            if cfg.get('dp_user'):
+                dataset.user = cfg.get('dp_user')
+            if cfg.get('dp_password'):
+                dataset.password = cfg.get('dp_password')
 
     return cfg
 
 
 def main():
     args = parse_args()
-
-    register_all_modules(init_default_scope=False)
 
     # load config
     cfg = Config.fromfile(args.config)

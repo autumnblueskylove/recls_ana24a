@@ -1,91 +1,132 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import os
+import re
+from itertools import groupby
 
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
-
-from mmcls.utils import load_json_logs
+from mmpretrain.utils import load_json_log
 
 
 def cal_train_time(log_dicts, args):
     """Compute the average time per training iteration."""
     for i, log_dict in enumerate(log_dicts):
         print(f'{"-" * 5}Analyze train time of {args.json_logs[i]}{"-" * 5}')
-        all_times = []
-        for epoch in log_dict.keys():
-            if args.include_outliers:
-                all_times.append(log_dict[epoch]['time'])
-            else:
-                all_times.append(log_dict[epoch]['time'][1:])
-        all_times = np.array(all_times)
-        epoch_ave_time = all_times.mean(-1)
-        slowest_epoch = epoch_ave_time.argmax()
-        fastest_epoch = epoch_ave_time.argmin()
-        std_over_epoch = epoch_ave_time.std()
-        print(f'slowest epoch {slowest_epoch + 1}, '
-              f'average time is {epoch_ave_time[slowest_epoch]:.4f}')
-        print(f'fastest epoch {fastest_epoch + 1}, '
-              f'average time is {epoch_ave_time[fastest_epoch]:.4f}')
-        print(f'time std over epochs is {std_over_epoch:.4f}')
-        print(f'average iter time: {np.mean(all_times):.4f} s/iter')
+        train_logs = log_dict['train']
+
+        if 'epoch' in train_logs[0]:
+            epoch_ave_times = []
+            for _, logs in groupby(train_logs, lambda log: log['epoch']):
+                if args.include_outliers:
+                    all_time = np.array([log['time'] for log in logs])
+                else:
+                    all_time = np.array([log['time'] for log in logs])[1:]
+                epoch_ave_times.append(all_time.mean())
+            epoch_ave_times = np.array(epoch_ave_times)
+            slowest_epoch = epoch_ave_times.argmax()
+            fastest_epoch = epoch_ave_times.argmin()
+            std_over_epoch = epoch_ave_times.std()
+            print(f'slowest epoch {slowest_epoch + 1}, '
+                  f'average time is {epoch_ave_times[slowest_epoch]:.4f}')
+            print(f'fastest epoch {fastest_epoch + 1}, '
+                  f'average time is {epoch_ave_times[fastest_epoch]:.4f}')
+            print(f'time std over epochs is {std_over_epoch:.4f}')
+
+        avg_iter_time = np.array([log['time'] for log in train_logs]).mean()
+        print(f'average iter time: {avg_iter_time:.4f} s/iter')
         print()
 
 
-def plot_curve(log_dicts, args):
-    """Plot train metric-iter graph."""
-    if args.backend is not None:
-        plt.switch_backend(args.backend)
-    sns.set_style(args.style)
-    # if legend is None, use {filename}_{key} as legend
+def get_legends(args):
+    """if legend is None, use {filename}_{key} as legend."""
     legend = args.legend
     if legend is None:
         legend = []
         for json_log in args.json_logs:
             for metric in args.keys:
-                legend.append(f'{json_log}_{metric}')
+                # remove '.json' in the end of log names
+                basename = os.path.basename(json_log)[:-5]
+                if basename.endswith('.log'):
+                    basename = basename[:-4]
+                legend.append(f'{basename}_{metric}')
     assert len(legend) == (len(args.json_logs) * len(args.keys))
-    metrics = args.keys
+    return legend
 
+
+def plot_phase_train(metric, train_logs, curve_label):
+    """plot phase of train curve."""
+    xs = np.array([log['step'] for log in train_logs])
+    ys = np.array([log[metric] for log in train_logs])
+
+    if 'epoch' in train_logs[0]:
+        scale_factor = train_logs[-1]['step'] / train_logs[-1]['epoch']
+        xs = xs / scale_factor
+        plt.xlabel('Epochs')
+    else:
+        plt.xlabel('Iters')
+
+    plt.plot(xs, ys, label=curve_label, linewidth=0.75)
+
+
+def plot_phase_val(metric, val_logs, curve_label):
+    """plot phase of val curve."""
+    xs = np.array([log['step'] for log in val_logs])
+    ys = np.array([log[metric] for log in val_logs])
+
+    plt.xlabel('Steps')
+    plt.plot(xs, ys, label=curve_label, linewidth=0.75)
+
+
+def plot_curve_helper(log_dicts, metrics, args, legend):
+    """plot curves from log_dicts by metrics."""
     num_metrics = len(metrics)
     for i, log_dict in enumerate(log_dicts):
-        epochs = list(log_dict.keys())
-        for j, metric in enumerate(metrics):
-            print(f'plot curve of {args.json_logs[i]}, metric is {metric}')
-            if metric not in log_dict[epochs[0]]:
-                raise KeyError(
-                    f'{args.json_logs[i]} does not contain metric {metric} '
-                    f'in train mode')
+        for j, key in enumerate(metrics):
+            json_log = args.json_logs[i]
+            print(f'plot curve of {json_log}, metric is {key}')
+            curve_label = legend[i * num_metrics + j]
 
-            if any(m in metric for m in ('mAP', 'accuracy')):
-                xs = epochs
-                ys = [log_dict[e][metric] for e in xs]
-                ax = plt.gca()
-                ax.set_xticks(xs)
-                plt.xlabel('epoch')
-                plt.plot(xs, ys, label=legend[i * num_metrics + j], marker='o')
+            train_keys = {} if len(log_dict['train']) == 0 else set(
+                log_dict['train'][0].keys()) - {'step', 'epoch'}
+            val_keys = {} if len(log_dict['val']) == 0 else set(
+                log_dict['val'][0].keys()) - {'step'}
+
+            if key in val_keys:
+                plot_phase_val(key, log_dict['val'], curve_label)
+            elif key in train_keys:
+                plot_phase_train(key, log_dict['train'], curve_label)
             else:
-                xs = []
-                ys = []
-                num_iters_per_epoch = log_dict[epochs[0]]['iter'][-1]
-                for epoch in epochs:
-                    iters = log_dict[epoch]['iter']
-                    if log_dict[epoch]['mode'][-1] == 'val':
-                        iters = iters[:-1]
-                    assert len(iters) > 0, (
-                        'The training log is empty, please try to reduce the '
-                        'interval of log in config file.')
-                    xs.append(
-                        np.array(iters) + (epoch - 1) * num_iters_per_epoch)
-                    ys.append(np.array(log_dict[epoch][metric][:len(iters)]))
-                xs = np.concatenate(xs)
-                ys = np.concatenate(ys)
-                plt.xlabel('iter')
-                plt.plot(
-                    xs, ys, label=legend[i * num_metrics + j], linewidth=0.5)
+                raise ValueError(
+                    f'Invalid key "{key}", please choose from '
+                    f'{set.union(set(train_keys), set(val_keys))}.')
             plt.legend()
-        if args.title is not None:
-            plt.title(args.title)
+
+
+def plot_curve(log_dicts, args):
+    """Plot train metric-iter graph."""
+    # set style
+    try:
+        import seaborn as sns
+        sns.set_style(args.style)
+    except ImportError:
+        pass
+
+    # set plot window size
+    wind_w, wind_h = args.window_size.split('*')
+    wind_w, wind_h = int(wind_w), int(wind_h)
+    plt.figure(figsize=(wind_w, wind_h))
+
+    # get legends and metrics
+    legends = get_legends(args)
+    metrics = args.keys
+
+    # plot curves from log_dicts by metrics
+    plot_curve_helper(log_dicts, metrics, args, legends)
+
+    # set title and show or save
+    if args.title is not None:
+        plt.title(args.title)
     if args.out is None:
         plt.show()
     else:
@@ -116,10 +157,15 @@ def add_plot_parser(subparsers):
         default=None,
         help='legend of each plot')
     parser_plt.add_argument(
-        '--backend', type=str, default=None, help='backend of plt')
-    parser_plt.add_argument(
-        '--style', type=str, default='dark', help='style of plt')
+        '--style',
+        type=str,
+        default='whitegrid',
+        help='style of the figure, need `seaborn` package.')
     parser_plt.add_argument('--out', type=str, default=None)
+    parser_plt.add_argument(
+        '--window-size',
+        default='12*7',
+        help='size of the window to display images, in format of "$W*$H".')
 
 
 def add_time_parser(subparsers):
@@ -135,8 +181,7 @@ def add_time_parser(subparsers):
         '--include-outliers',
         action='store_true',
         help='include the first value of every epoch when computing '
-        'the average time',
-    )
+        'the average time')
 
 
 def parse_args():
@@ -146,6 +191,10 @@ def parse_args():
     add_plot_parser(subparsers)
     add_time_parser(subparsers)
     args = parser.parse_args()
+
+    if hasattr(args, 'window_size') and args.window_size != '':
+        assert re.match(r'\d+\*\d+', args.window_size), \
+            "'window-size' must be in format 'W*H'."
     return args
 
 
@@ -156,9 +205,12 @@ def main():
     for json_log in json_logs:
         assert json_log.endswith('.json')
 
-    log_dicts = load_json_logs(json_logs)
+    log_dicts = [load_json_log(json_log) for json_log in json_logs]
 
-    eval(args.task)(log_dicts, args)
+    if args.task == 'cal_train_time':
+        cal_train_time(log_dicts, args)
+    elif args.task == 'plot_curve':
+        plot_curve(log_dicts, args)
 
 
 if __name__ == '__main__':

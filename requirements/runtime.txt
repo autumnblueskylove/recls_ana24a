@@ -3,9 +3,6 @@ boto3
 einops
 geopandas
 mlflow
-mmcv>=2.0.0rc4,<2.1.0
-mmengine>=0.4.0,<1.0.0
-mmpretrain @ git+https://github.com/open-mmlab/mmpretrain@v1.0.0rc7
-pygeococotools>=1.1.1
-sialibs-dataset
-siavision>=0.1.2
+mmcv>=2.0.0
+mmengine>=0.7.4
+mmpretrain>=1.0.0rc8

@@ -1,4 +1,3 @@
-from mmpretrain.visualization import UniversalVisualizer
+from .mlflow_vis_backend import MLflowVisBackend
 
-
-__all__ = ['UniversalVisualizer']
+__all__ = ['MLflowVisBackend']

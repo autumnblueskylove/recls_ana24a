@@ -2,6 +2,7 @@
 import argparse
 import os
 import os.path as osp
+import shutil
 from copy import deepcopy
 
 import mmengine
@@ -9,12 +10,16 @@ from mmengine.config import Config, ConfigDict, DictAction
 from mmengine.evaluator import DumpResults
 from mmengine.runner import Runner
 
+import recls  # noqa: F403, F401
+from recls.utils import download_artifacts, log_artifact
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMPreTrain test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--run-id', type=str, help='run id for mlflow')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -75,6 +80,9 @@ def parse_args():
     # will pass the `--local-rank` parameter to `tools/train.py` instead
     # of `--local_rank`.
     parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
+    # for temporary mlflow artifacts
+    parser.add_argument('--tmpdir', type=str, default='.tmpdir')
+
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -152,7 +160,27 @@ def merge_args(cfg, args):
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
+    # to prevent duplicated logs of mlflow
+    if args.run_id:
+        vis_backends = cfg.visualizer.vis_backends
+        cfg.visualizer.vis_backends = [
+            vis for vis in vis_backends if not vis.type == 'MLflowVisBackend'
+        ]
+
     return cfg
+
+
+def update_args_for_mlflow(args):
+    shutil.rmtree(args.tmpdir, ignore_errors=True)
+    mmengine.mkdir_or_exist(args.tmpdir)
+
+    download_artifacts(args.run_id, 'checkpoint/model_config.py', args.tmpdir)
+    download_artifacts(args.run_id, 'checkpoint/model_final.pth', args.tmpdir)
+    args.config = osp.join(args.tmpdir, 'checkpoint/model_config.py')
+    args.checkpoint = osp.join(args.tmpdir, 'checkpoint/model_final.pth')
+
+    out_dir = args.work_dir if args.work_dir else args.tmpdir
+    args.out = osp.join(out_dir, 'results.pkl')
 
 
 def main():
@@ -161,6 +189,9 @@ def main():
     if args.out is None and args.out_item is not None:
         raise ValueError('Please use `--out` argument to specify the '
                          'path of the output file before using `--out-item`.')
+
+    if args.run_id:
+        update_args_for_mlflow(args)
 
     # load config
     cfg = Config.fromfile(args.config)
@@ -180,6 +211,9 @@ def main():
 
     if args.out and args.out_item == 'metrics':
         mmengine.dump(metrics, args.out)
+
+    if args.run_id:
+        log_artifact(args.run_id, args.out, 'inference')
 
 
 if __name__ == '__main__':

@@ -1,12 +1,22 @@
 import os
 import os.path as osp
-import platform
 import shutil
 import sys
 import warnings
 from setuptools import find_packages, setup
 
-version_file = 'recls/version.py'
+
+def readme():
+    with open('README.md', encoding='utf-8') as f:
+        content = f.read()
+    return content
+
+
+def get_version():
+    version_file = 'recls/version.py'
+    with open(version_file, 'r', encoding='utf-8') as f:
+        exec(compile(f.read(), version_file, 'exec'))
+    return locals()['__version__']
 
 
 def parse_requirements(fname='requirements.txt', with_version=True):
@@ -16,15 +26,16 @@ def parse_requirements(fname='requirements.txt', with_version=True):
     Args:
         fname (str): path to requirements file
         with_version (bool, default=False): if True include version specs
+
     Returns:
         List[str]: list of requirements items
+
     CommandLine:
         python -c "import setup; print(setup.parse_requirements())"
     """
     import re
     import sys
     from os.path import exists
-
     require_fpath = fname
 
     def parse_line(line):
@@ -38,8 +49,6 @@ def parse_requirements(fname='requirements.txt', with_version=True):
             info = {'line': line}
             if line.startswith('-e '):
                 info['package'] = line.split('#egg=')[1]
-            elif '@git+' in line:
-                info['package'] = line
             else:
                 # Remove versioning from the package
                 pat = '(' + '|'.join(['>=', '==', '>']) + ')'
@@ -57,6 +66,9 @@ def parse_requirements(fname='requirements.txt', with_version=True):
                         info['platform_deps'] = platform_deps
                     else:
                         version = rest  # NOQA
+                    if '--' in version:
+                        # the `extras_require` doesn't accept options.
+                        version = version.split('--')[0].strip()
                     info['version'] = (op, version)
             yield info
 
@@ -86,12 +98,6 @@ def parse_requirements(fname='requirements.txt', with_version=True):
     return packages
 
 
-def get_version():
-    with open(version_file, 'r') as f:
-        exec(compile(f.read(), version_file, 'exec'))
-    return locals()['__version__']
-
-
 def add_mim_extension():
     """Add extra files that are required to support MIM into the package.
 
@@ -103,28 +109,29 @@ def add_mim_extension():
     # parse installment mode
     if 'develop' in sys.argv:
         # installed by `pip install -e .`
-        # set `copy` mode here since symlink fails on Windows.
-        mode = 'copy' if platform.system() == 'Windows' else 'symlink'
-    elif 'sdist' in sys.argv or 'bdist_wheel' in sys.argv or platform.system(
-    ) == 'Windows':
+        mode = 'symlink'
+    elif 'sdist' in sys.argv or 'bdist_wheel' in sys.argv:
         # installed by `pip install .`
         # or create source distribution by `python setup.py sdist`
-        # set `copy` mode here since symlink fails with WinError on Windows.
         mode = 'copy'
     else:
         return
+
     filenames = ['tools', 'configs', 'model-index.yml']
     repo_path = osp.dirname(__file__)
     mim_path = osp.join(repo_path, 'recls', '.mim')
     os.makedirs(mim_path, exist_ok=True)
+
     for filename in filenames:
         if osp.exists(filename):
             src_path = osp.join(repo_path, filename)
             tar_path = osp.join(mim_path, filename)
+
             if osp.isfile(tar_path) or osp.islink(tar_path):
                 os.remove(tar_path)
             elif osp.isdir(tar_path):
                 shutil.rmtree(tar_path)
+
             if mode == 'symlink':
                 src_relpath = osp.relpath(src_path, osp.dirname(tar_path))
                 try:
@@ -135,19 +142,20 @@ def add_mim_extension():
                     # the error happens, the src file will be copied
                     mode = 'copy'
                     warnings.warn(
-                        f'Failed to create a symbolic link for {src_relpath},'
-                        f' and it will be copied to {tar_path}')
-
+                        f'Failed to create a symbolic link for {src_relpath}, '
+                        f'and it will be copied to {tar_path}')
                 else:
                     continue
-            if mode != 'copy':
-                raise ValueError(f'Invalid mode {mode}')
-            if osp.isfile(src_path):
-                shutil.copyfile(src_path, tar_path)
-            elif osp.isdir(src_path):
-                shutil.copytree(src_path, tar_path)
+
+            if mode == 'copy':
+                if osp.isfile(src_path):
+                    shutil.copyfile(src_path, tar_path)
+                elif osp.isdir(src_path):
+                    shutil.copytree(src_path, tar_path)
+                else:
+                    warnings.warn(f'Cannot copy file {src_path}.')
             else:
-                warnings.warn(f'Cannot copy file {src_path}.')
+                raise ValueError(f'Invalid mode {mode}')
 
 
 if __name__ == '__main__':
@@ -156,8 +164,9 @@ if __name__ == '__main__':
         name='recls',
         version=get_version(),
         author='SIA',
-        packages=find_packages(exclude=('configs', 'tools')),
+        packages=find_packages(exclude=('configs', 'tools', 'tests')),
         install_requires=parse_requirements('requirements/runtime.txt'),
+        python_requires='>=3.7',
         extras_require={
             'optional': parse_requirements('requirements/optional.txt'),
         },
