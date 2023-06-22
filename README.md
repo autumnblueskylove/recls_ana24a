@@ -2,37 +2,24 @@
 
 ## Introduction
 
-**recls** is a SI-Analytics's classification framework based on [mmclassification](https://github.com/open-mmlab/mmclassification).
+**recls** is a SI-Analytics's classification framework based on [mmpretrain](https://github.com/open-mmlab/mmpretrain).
 
 Main goal of this project is to provide a maintanable, well-moduled, reliable classification framework **especially focusing on satellite and aerial imagery domain**.
 
 If you are new to **mm**-frameworks, we recommend you to read documentations in mmclassification as below;
 
-- [mmclassification/Getting Started](https://mmclassification.readthedocs.io/en/latest/getting_started.html)
+- [mmpretrain/Getting Started](https://mmpretrain.readthedocs.io/en/latest/)
 
-<details>
-<summary>Major Features</summary>
+### Major Features for us
 
 - **MLOps Pipelines**
-  We provide mlops-related below features:
 
-  1. MLFlowLogger to track experiment and save checkpoint
-  2. Batch Inference with MLFlow Run-ID
-  3. Evaluation with MLFlow Run-ID
-
-- **Domain-related Features**
-
-  1. Batch inference for large satellite imagery with efficient memory cost and inference time
+  - Train, test and evaluation are tracked such as experiment and save checkpoint
 
 - **Dataset**
 
-  1. MonogoDB
-  2. DatasetPlatform
-     - Install DpClient
-       - `pip3 install --index-url https://pypi.sia-service.kr/simple/ --upgrade dp-client `
+  - DatasetPlatform by SIA
 
-</details>
-
-# Common scripts
+### Common scripts
 
 You can check most common scripts and tools in the [tools/README.md](tools/README.md).

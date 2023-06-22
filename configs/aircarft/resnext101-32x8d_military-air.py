@@ -12,6 +12,7 @@ load_from = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext1
 # runtime
 default_hooks = dict(checkpoint=dict(interval=20), )
 
+# train
 train_cfg = dict(val_interval=10)
 
 # mlflow

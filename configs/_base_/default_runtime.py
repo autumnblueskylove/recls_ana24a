@@ -15,7 +15,7 @@ default_hooks = dict(
     # save checkpoint per epoch.
     checkpoint=dict(type='CheckpointHook', interval=1),
 
-    # set sampler seed in distributed evrionment.
+    # set sampler seed in distributed environment.
     sampler_seed=dict(type='DistSamplerSeedHook'),
 
     # validation results visualization, set True to enable it.

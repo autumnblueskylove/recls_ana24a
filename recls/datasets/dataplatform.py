@@ -33,7 +33,7 @@ class DataPlatformDataset(BaseDataset):
             example:
                 [dict(id=0, name='class1'), dict(id=1, name='class2'), ...]
         pipeline (List[dict]): A list of dict, where each element
-            represents an operation defined in :mod:`recls.dataset.pipelines`
+            represents an operation defined in :mod:`recls.dataset.transforms`
         host (str): DataPlatform URL with port
         user (str): user in DataPlatform
         password (str): password of user

@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import mmcv
 import numpy as np
+from mmcv import BaseTransform
 from mmpretrain.registry import TRANSFORMS
 from osgeo import gdal
 
@@ -15,29 +16,34 @@ def stretch_image(
     max_percentile=100,
     clipped_min_val=10,
 ) -> np.ndarray:
-    """특정 범위로 normalization을 진행합니다.
-
-    @param image: 이미지
-    @param new_max: 범위 최댓값
-    @param min_percent: 범위 최솟값 %
-    @param max_percent: 범위 최댓값 %
-    @param dtype: 변환할 이미지 데이터 타입
-    @return: 변환된 이미지
+    """Normalize image to specified range by min and max percentile.
 
     Args:
-        min_percentile:
-        min_percentile:
+        image (np.ndarray): Input image.
+        new_max (float): Maximum values for new range.
+        min_percentile (float): Minimum percentile to find minimum image value.
+        max_percentile (float): Maximum percentile to find maximum image value.
+        clipped_min_val (float): Minimum value to exclude when find percentile
+            for ignoring zero-values
+
+    Returns:
+        np.ndarray: Normalized image.
     """
 
-    def _scale_range(min_val: int,
-                     max_val: int,
-                     to_range=255.0) -> Tuple[int, int]:
-        """최소 범위에 해당하는 최솟값과 최댓값을 반환합니다.
+    def _guarantee_minimum_range(min_val: float,
+                                 max_val: float,
+                                 to_range=255.0) -> Tuple[float, float]:
+        """Guarantee that "max_val - min_val" is greater than the specified
+        range.
 
-        @param min_val: 범위를 축소시킬 값 중 최솟값
-        @param max_val: 범위를 축소시킬 값 중 최댓값
-        @param min_range: 축소시킬 범위
-        @return: 최솟값과 최댓값
+        Args:
+            min_val (float): Minimum value to check range.
+            max_val (float): Maximum value to check range.
+            to_range (float) : Minimum guaranteed range that is wanted.
+
+        Returns:
+            (float, float): Guaranteed minimum and maximum values.
+
         """
         intensity_gap = max_val - min_val
         if intensity_gap < to_range:
@@ -58,15 +64,15 @@ def stretch_image(
         filtered_band = band[band > clipped_min_val]
 
         if filtered_band.any():
-            min_val = np.percentile(filtered_band, min_percentile)
-            max_val = np.percentile(filtered_band, max_percentile)
+            min_value = np.percentile(filtered_band, min_percentile)
+            max_value = np.percentile(filtered_band, max_percentile)
         else:
-            min_val, max_val = 0, 255
+            min_value, max_value = 0, 255
 
-        min_val, max_val = _scale_range(min_val, max_val)
+        min_value, max_value = _guarantee_minimum_range(min_value, max_value)
 
-        cvt_range = max_val - min_val
-        band = (band - min_val) / cvt_range * new_max
+        cvt_range = max_value - min_value
+        band = (band - min_value) / cvt_range * new_max
         band = np.clip(band, 0, new_max)
         image[:, :, idx] = band
 
@@ -105,7 +111,16 @@ def read_as_array(scene,
 
 
 @TRANSFORMS.register_module()
-class RandomStretch:
+class RandomStretch(BaseTransform):
+    """Stretch image to random minimum and maximum percentile.
+
+    Args:
+        min_percentile_range (float, float): Range of the random minimum
+            percentile.
+        max_percentile_range (float, float): Range of the randon maximum
+            percentile.
+        new_max (float): Desired maximum value that is stretched.
+    """
 
     def __init__(self,
                  min_percentile_range=(0.0, 3.0),
@@ -121,11 +136,21 @@ class RandomStretch:
         self.max_percentile_range = max_percentile_range
         self.new_max = new_max
 
-    def __call__(self, results):
+    def transform(self, results):
+        """Transform function to randomly stretch an image.
+
+        Args:
+            results (dict): Result dict from loading pipline.
+
+        Returns:
+            dict: Stretched results, 'img' keys is updated in result dict.
+        """
         min_percentile = np.random.uniform(self.min_percentile_range[0],
                                            self.min_percentile_range[1])
         max_percentile = np.random.uniform(self.max_percentile_range[0],
                                            self.max_percentile_range[1])
+        """
+        """
         for key in results.get('img_fields', ['img']):
             results[key] = stretch_image(
                 results[key],
@@ -137,30 +162,36 @@ class RandomStretch:
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += f'(min_percentile_range={self.min_percentile_range}, '
+        repr_str += f'min_percentile_range={self.min_percentile_range}, '
         repr_str += f'max_percentile_range={self.max_percentile_range}, '
         repr_str += f'new_max={self.new_max})'
         return repr_str
 
 
 @TRANSFORMS.register_module()
-class Identity:
+class Identity(BaseTransform):
     """Placeholder pipeline."""
 
-    def __call__(self, results):
+    def transform(self, results):
         """
         Args:
-            img (PIL Image): Input image.
+            results (Dict): Result dict from loading pipline.
 
         Returns:
-            PIL Image: Output image.
+            dict: Identical results.
         """
 
         return results
 
 
 @TRANSFORMS.register_module()
-class CropInstance:
+class CropInstance(BaseTransform):
+    """Crop instance in image by coordinates.
+
+    Args:
+        expand_ratio (float): Expand ratio when cropping. In other word, the
+            background is included.
+    """
 
     def __init__(self, expand_ratio=1.0):
         assert isinstance(expand_ratio, float)
@@ -168,6 +199,18 @@ class CropInstance:
         self.expand_ratio = expand_ratio
 
     def rotate(self, img, rad, center):
+        """Rotate image by radian and center.
+
+        Args:
+            img (np.ndarray): Image to be rotated.
+            rad (float): Rotation angle in radian, positive values mean
+                counter-clockwise rotation.
+            center (tuple[float]): Center point (x, y) for the ration in the
+                source image.
+
+        Returns:
+            np.ndarray: The rotated image.
+        """
         degree = -rad * (180.0 / math.pi)
         img = mmcv.imrotate(
             img,
@@ -177,6 +220,18 @@ class CropInstance:
         return img
 
     def crop(self, img, x, y, w, h):
+        """Crop an image by center and size.
+
+        Args:
+            img (np.ndarray): Image to be cropped.
+            x (int): Center x coordinate.
+            y (int): Center y coordinate.
+            w (int): Width for cropping.
+            h (int): Height for cropping.
+
+        Returns:
+            np.ndarray: The cropped image.
+        """
         xmin = int(x - self.expand_ratio * w / 2)
         xmax = int(x + self.expand_ratio * w / 2)
         ymin = int(y - self.expand_ratio * h / 2)
@@ -185,7 +240,15 @@ class CropInstance:
         img = img[ymin:ymax, xmin:xmax, ]
         return img
 
-    def __call__(self, results):
+    def transform(self, results):
+        """Transform function to crop instance in an image.
+
+         Args:
+            results (dict): Result dict from loading pipline.
+
+        Returns:
+            dict: Cropped results, 'img' keys is updated in result dict.
+        """
         coordinate = results['img_info']['coordinate']
         img = results['img']
         img = self.rotate(img, coordinate[-1], (coordinate[0], coordinate[1]))
@@ -194,6 +257,11 @@ class CropInstance:
 
         results['img'] = img
         return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(expand_ratio={self.expand_ratio})'
+        return repr_str
 
 
 @TRANSFORMS.register_module()
@@ -204,7 +272,7 @@ class CropInstanceInScene(CropInstance):
             height * expand_ratio
             defaults to 1.0
         rot_dir (str): Rotation direction of instance
-            defaults to 'ccw'
+            defaults to 'cw'
     """
 
     def __init__(self, expand_ratio: float = 1.0, rot_dir: str = 'cw'):
@@ -214,8 +282,9 @@ class CropInstanceInScene(CropInstance):
         self.rot_dir = rot_dir
         super(CropInstanceInScene, self).__init__(expand_ratio)
 
-    def __call__(self, results):
-        """
+    def transform(self, results):
+        """Transform function to crop instance in a scene.
+
         Args:
             results (dict): Result dict from loading pipeline and to be used
                 below.
@@ -265,9 +334,12 @@ class CropInstanceInScene(CropInstance):
         Args:
             rbox (List[float)]: cx, cy, width, height, radian
         """
-        MARGIN_RATIO = 0.1  # TODO why? for rotation?
+        MARGIN_RATIO = 0.2
 
         x, y, w, h, rad = rbox
+        w *= self.expand_ratio
+        h *= self.expand_ratio
+
         cosa = math.cos(rad)
         sina = math.sin(rad)
         bbox_w = abs(cosa * w) + abs(sina * h)
@@ -285,9 +357,24 @@ class CropInstanceInScene(CropInstance):
 
         return [xmin, ymin, xmax, ymax]
 
+    def __repr__(self):
+        repr_str = super().__repr__()[:-1]
+        repr_str += f', rot_dir={self.rot_dir})'
+        return repr_str
+
 
 @TRANSFORMS.register_module()
-class JitterRBox:
+class JitterRBox(BaseTransform):
+    """Jitter rotated bounding box to random center (x, y), size (width,
+    height) and rotation.
+
+    Args:
+        x_range (float): Range center x to jitter rbox.
+        y_range (float): Range center y to jitter rbox.
+        w_range (float, float): Range ratio of width to jitter rbox.
+        h_range (float, float): Range ratio of height to jitter rbox.
+        rad_range (float, float): Range radians to jitter rbox
+    """
 
     def __init__(
             self,
@@ -335,7 +422,16 @@ class JitterRBox:
 
         return rand + rad
 
-    def __call__(self, results):
+    def transform(self, results):
+        """Transform function to jitter rotated bounding box.
+
+        Args:
+            results (dict): Result dict from loading pipline.
+
+        Returns:
+            dict: Jittered results, 'img_info[coordinate]' key is updated in
+                result dict.
+        """
 
         coordinate = copy.deepcopy(results['img_info']['coordinate'])
         x, y, w, h, rad = coordinate

@@ -11,6 +11,16 @@ from mmengine.visualization.vis_backend import force_init_env
 
 @VISBACKENDS.register_module(force=True)
 class MLflowVisBackend(_MLflowVisBackend):
+    """Modified MLflow visualization backend class based on mmengine.
+
+    - Support to set existed run id of mlflow
+    - Log artifact of "model_config.py" instead of config.py
+    - Log artifact of "model_final.pth" and "###.log" when training get done.
+
+    Args:
+        run_id (str): Run id of mlflow to be set.
+        **kwargs (dict): For parent class.
+    """
 
     def __init__(self, run_id=None, **kwargs):
         """Class to log metrics and (optionally) a trained model to MLflow.

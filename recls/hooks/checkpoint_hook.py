@@ -1,19 +1,16 @@
 import os.path as osp
 import shutil
 
-from mmengine.dist import is_main_process
 from mmengine.hooks import CheckpointHook as _CheckpointHook
 from mmengine.registry import HOOKS
 
 
 @HOOKS.register_module(force=True)
 class CheckpointHook(_CheckpointHook):
+    """Support to save checkpoint whose name is 'model_final.pth'."""
 
-    def _save_checkpoint(self, runner) -> None:
-        super()._save_checkpoint(runner)
-
-        if not is_main_process():
-            return
+    def after_train(self, runner) -> None:
+        super().after_train(runner)
 
         save_file = osp.join(runner.work_dir, 'last_checkpoint')
         # Open the file A and read the first line

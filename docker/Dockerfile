@@ -15,7 +15,10 @@ RUN tar -xzvf gdal-2.4.1.tar.gz
 WORKDIR /libs/gdal-2.4.1/swig/python/
 RUN python3 setup.py build && python3 setup.py install
 
-WORKDIR /recls
+# Install MIM
+RUN pip3 install openmim
 
+# Install recls
+WORKDIR /recls
 COPY . /recls
-RUN pip3 install --no-cache-dir -e ".[optional]"
+RUN mim install --no-cache-dir -e ".[Optional]"

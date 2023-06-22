@@ -171,6 +171,15 @@ def merge_args(cfg, args):
 
 
 def update_args_for_mlflow(args):
+    """Download model config and weight file from mlflow and update arguments
+    relating paths from run id of mlflow.
+
+    Args:
+        args: Arguments that have to include run_id.
+
+    Returns:
+        Namespace: Updated arguments, "config" and "checkpoint" variables.
+    """
     shutil.rmtree(args.tmpdir, ignore_errors=True)
     mmengine.mkdir_or_exist(args.tmpdir)
 

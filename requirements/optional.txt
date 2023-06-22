@@ -1,2 +1,3 @@
 -i https://pypi.sia-service.kr/simple/
 dp-client
+pytest
