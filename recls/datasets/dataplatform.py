@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 from mmpretrain.datasets.base_dataset import BaseDataset
 from mmpretrain.registry import DATASETS
 
@@ -73,22 +72,18 @@ class DataPlatformDataset(BaseDataset):
         for data in dataset:
             filename = data['filepath']
             for label in data['labels']:
-                if label['width'] > 1 and label[
-                        'height'] > 1:  # temporarily avoid label noise
+                # temporarily avoid label noise
+                if label['width'] > 1 and label['height'] > 1:
                     info = {
-                        'img_info': {
-                            'filename':
-                            filename,
-                            'coordinate': [
-                                label['x'], label['y'], label['width'],
-                                label['height'], label['rotate_angle']
-                            ]
-                        },
+                        'img_path':
+                        filename,
+                        'rbox': [
+                            label['x'], label['y'], label['width'],
+                            label['height'], label['rotate_angle']
+                        ],
                         'gt_label':
-                        np.array(
-                            self.class_name_to_id[label['class_name']],
-                            dtype=np.int64),
-                        'label_uuid':
+                        int(self.class_name_to_id[label['class_name']]),
+                        'ilid':
                         label['ilid']
                     }
                     data_list.append(info)

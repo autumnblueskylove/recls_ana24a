@@ -58,7 +58,7 @@ train_pipeline = [
         type='RandomFlip',
         prob=0.5,
         direction=['horizontal', 'vertical', 'diagonal']),
-    dict(type='PackInputs'),
+    dict(type='PackInputs', meta_keys=['img_path', 'ilid']),
 ]
 
 test_pipeline = [

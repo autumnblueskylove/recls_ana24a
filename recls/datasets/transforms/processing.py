@@ -249,7 +249,7 @@ class CropInstance(BaseTransform):
         Returns:
             dict: Cropped results, 'img' keys is updated in result dict.
         """
-        coordinate = results['img_info']['coordinate']
+        coordinate = results['rbox']
         img = results['img']
         img = self.rotate(img, coordinate[-1], (coordinate[0], coordinate[1]))
         img = self.crop(img, coordinate[0], coordinate[1], coordinate[2],
@@ -288,14 +288,14 @@ class CropInstanceInScene(CropInstance):
         Args:
             results (dict): Result dict from loading pipeline and to be used
                 below.
-                - results['image_info']['filename'] to open image
-                - results['image_info']['coordinate'] to get label
+                - results['img_path'] to open image
+                - results['rbox']' to get coordinate of label
         Return:
             dict: Added or update results to 'img'
         """
 
-        scene = gdal.Open(results['img_info']['filename'])
-        rbox = results['img_info']['coordinate']
+        scene = gdal.Open(results['img_path'])
+        rbox = results['rbox']
         crop_bbox = self.get_crop_bbox(rbox)
 
         # check and fix crop bbox that is in scene.
@@ -429,19 +429,19 @@ class JitterRBox(BaseTransform):
             results (dict): Result dict from loading pipline.
 
         Returns:
-            dict: Jittered results, 'img_info[coordinate]' key is updated in
+            dict: Jittered results, 'rbox' key is updated in
                 result dict.
         """
 
-        coordinate = copy.deepcopy(results['img_info']['coordinate'])
-        x, y, w, h, rad = coordinate
+        rbox = copy.deepcopy(results['rbox'])
+        x, y, w, h, rad = rbox
         new_x = x + self.jitter_point(w, self.x_range)
         new_y = y + self.jitter_point(h, self.y_range)
         new_w = self.jitter_window(w, self.w_range)
         new_h = self.jitter_window(h, self.h_range)
         new_rad = self.jitter_rad(rad, self.rad_range)
 
-        new_coordinate = [int(new_x), int(new_y), new_w, new_h, new_rad]
+        new_rbox = [int(new_x), int(new_y), new_w, new_h, new_rad]
 
-        results['img_info']['coordinate'] = new_coordinate
+        results['rbox'] = new_rbox
         return results
