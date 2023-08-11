@@ -18,4 +18,8 @@ class CheckpointHook(_CheckpointHook):
             old_model_file_path = save_file_p.readline().strip()
 
         model_final_path = osp.join(self.out_dir, 'model_final.pth')
-        shutil.copy2(old_model_file_path, model_final_path)
+        if self.best_ckpt_path:
+            print(f'model_final_path: {self.best_ckpt_path}')
+            shutil.copy2(self.best_ckpt_path, model_final_path)
+        else:
+            shutil.copy2(old_model_file_path, model_final_path)
