@@ -39,7 +39,7 @@ def get_categories_from_mlflow(args):
 
     category_map = cfg.get('categories')
     if category_map:
-        categories = [''] * len(category_map)
+        categories = dict()
         for category in reversed(category_map):
             categories[category['id']] = category['name']
     else:
@@ -146,7 +146,7 @@ def evaluate(preds_w_gt, categories=None):
 
     cm = metrics['confusion_matrix/result'].numpy()
     acc_per_cls = cm.diagonal() / cm.sum(axis=1) * 100.
-    metrics = [{'evaluation/00.Top-1 Acc': acc_per_cls.mean()}]
+    metrics = [{'evaluation/00.Top-1 Acc': np.nanmean(acc_per_cls)}]
     metrics += [{
         f'evaluation/{str(i + 1).zfill(2)}.{categories[i]}': acc_per_cls[i]
         for i in range(len(categories))
