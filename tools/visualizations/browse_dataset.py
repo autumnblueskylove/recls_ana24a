@@ -185,7 +185,7 @@ def main():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
-    init_default_scope('mmpretrain')  # Use mmpretrain as default scope.
+    init_default_scope('recls')  # Use recls as default scope.
 
     dataset_cfg = cfg.get(args.phase + '_dataloader').get('dataset')
     dataset = build_dataset(dataset_cfg)

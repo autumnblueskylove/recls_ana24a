@@ -1,25 +1,20 @@
 # defaults to use registries in mmpretrain
-default_scope = 'mmpretrain'
+default_scope = 'recls'
 
 # configure default hooks
 default_hooks = dict(
     # record the time of every iteration.
     timer=dict(type='IterTimerHook'),
-
     # print log every 100 iterations.
     logger=dict(type='LoggerHook', interval=100),
-
     # enable the parameter scheduler.
     param_scheduler=dict(type='ParamSchedulerHook'),
-
     # save checkpoint per epoch.
     checkpoint=dict(type='CheckpointHook', interval=1),
-
     # set sampler seed in distributed environment.
     sampler_seed=dict(type='DistSamplerSeedHook'),
-
     # validation results visualization, set True to enable it.
-    visualization=dict(type='VisualizationHook', enable=False),
+    visualization=dict(type='mmpretrain.VisualizationHook', enable=False),
 )
 
 # configure environment
@@ -36,7 +31,8 @@ env_cfg = dict(
 
 # set visualizer
 vis_backends = [dict(type='LocalVisBackend')]
-visualizer = dict(type='UniversalVisualizer', vis_backends=vis_backends)
+visualizer = dict(
+    type='mmpretrain.UniversalVisualizer', vis_backends=vis_backends)
 
 # set log level
 log_level = 'INFO'

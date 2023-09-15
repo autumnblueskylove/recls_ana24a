@@ -131,8 +131,8 @@ def merge_args(cfg, args):
                 type='TestTimeAug',
                 transforms=[
                     [
-                        dict(type='RandomFlip', prob=1.),
-                        dict(type='RandomFlip', prob=0.)
+                        dict(type='mmpretrain.RandomFlip', prob=1.),
+                        dict(type='mmpretrain.RandomFlip', prob=0.)
                     ],
                     [test_pipeline[-1]],
                 ])

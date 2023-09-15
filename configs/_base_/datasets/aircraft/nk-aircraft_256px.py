@@ -53,12 +53,12 @@ train_pipeline = [
         type='RandomStretch',
         min_percentile_range=(0.0, 0.1),
         max_percentile_range=(99.0, 100.0)),
-    dict(type='Resize', scale=(256, 256)),
+    dict(type='mmpretrain.Resize', scale=(256, 256)),
     dict(
-        type='RandomFlip',
+        type='mmpretrain.RandomFlip',
         prob=0.5,
         direction=['horizontal', 'vertical', 'diagonal']),
-    dict(type='PackInputs', meta_keys=['img_path', 'ilid']),
+    dict(type='mmpretrain.PackInputs', meta_keys=['img_path', 'ilid']),
 ]
 
 test_pipeline = [
@@ -67,8 +67,8 @@ test_pipeline = [
         type='RandomStretch',
         min_percentile_range=(0.0, 0.0),
         max_percentile_range=(100.0, 100.0)),
-    dict(type='Resize', scale=(256, 256)),
-    dict(type='PackInputs'),
+    dict(type='mmpretrain.Resize', scale=(256, 256)),
+    dict(type='mmpretrain.PackInputs'),
 ]
 
 train_dataloader = dict(
@@ -98,7 +98,7 @@ val_dataloader = dict(
         categories=categories),
     sampler=dict(type='DefaultSampler', shuffle=False),
 )
-val_evaluator = dict(type='Accuracy', topk=(1, 3))
+val_evaluator = dict(type='mmpretrain.Accuracy', topk=(1, 3))
 
 test_dataloader = val_dataloader
 test_evaluator = val_evaluator

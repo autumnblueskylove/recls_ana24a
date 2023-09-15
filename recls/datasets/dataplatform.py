@@ -1,8 +1,9 @@
 from typing import List
 
 from mmpretrain.datasets.base_dataset import BaseDataset
-from mmpretrain.registry import DATASETS
 from osgeo import gdal, osr
+
+from recls.registry import DATASETS
 
 
 def get_connection(host: str, user: str, password: str):

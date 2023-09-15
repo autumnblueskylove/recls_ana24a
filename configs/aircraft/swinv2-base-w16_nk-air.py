@@ -7,7 +7,7 @@ _base_ = [
 
 # model
 model = dict(
-    type='ImageClassifier',
+    type='mmpretrain.ImageClassifier',
     backbone=dict(
         window_size=[16, 16, 16, 8],
         drop_path_rate=0.2,

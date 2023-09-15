@@ -5,8 +5,8 @@ from typing import List, Tuple
 import mmcv
 import numpy as np
 from mmcv import BaseTransform
-from mmpretrain.registry import TRANSFORMS
-from osgeo import gdal
+
+from recls.registry import TRANSFORMS
 
 
 def stretch_image(
@@ -293,6 +293,7 @@ class CropInstanceInScene(CropInstance):
         Return:
             dict: Added or update results to 'img'
         """
+        from osgeo import gdal
 
         scene = gdal.Open(results['img_path'])
         rbox = results['rbox']

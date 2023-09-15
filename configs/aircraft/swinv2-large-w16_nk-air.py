@@ -12,7 +12,7 @@ test_dataloader = dict(batch_size=32)
 
 # model
 model = dict(
-    type='ImageClassifier',
+    type='mmpretrain.ImageClassifier',
     backbone=dict(
         window_size=[16, 16, 16, 8], pretrained_window_sizes=[12, 12, 12, 6]),
     head=dict(num_classes=24))

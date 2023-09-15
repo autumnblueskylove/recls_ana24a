@@ -121,7 +121,7 @@ venv.bak/
 *.pkl.json
 *.log.json
 /work_dirs
-/mmcls/.mim
+/recls/.mim
 .DS_Store
 
 # Pytorch
@@ -132,3 +132,5 @@ venv.bak/
 *.pvti-journal
 /cache_engine
 /report
+/mlruns
+.tmpdir/

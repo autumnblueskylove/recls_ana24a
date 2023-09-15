@@ -1,18 +1,19 @@
 # Model settings
 model = dict(
-    type='ImageClassifier',
+    type='mmpretrain.ImageClassifier',
+    data_preprocessor=dict(type='mmpretrain.ClsDataPreprocessor'),
     backbone=dict(
-        type='ConvNeXt',
+        type='mmpretrain.ConvNeXt',
         arch='huge',
         drop_path_rate=0.1,
         layer_scale_init_value=0.,
         use_grn=True,
     ),
     head=dict(
-        type='LinearClsHead',
+        type='mmpretrain.LinearClsHead',
         num_classes=1000,
         in_channels=2816,
-        loss=dict(type='LabelSmoothLoss', label_smooth_val=0.1),
+        loss=dict(type='mmpretrain.LabelSmoothLoss', label_smooth_val=0.1),
         init_cfg=None,
     ),
     init_cfg=dict(

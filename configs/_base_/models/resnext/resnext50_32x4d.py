@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='ImageClassifier',
+    type='mmpretrain.ImageClassifier',
     backbone=dict(
         type='ResNeXt',
         depth=50,
@@ -9,11 +9,11 @@ model = dict(
         groups=32,
         width_per_group=4,
         style='pytorch'),
-    neck=dict(type='GlobalAveragePooling'),
+    neck=dict(type='mmpretrain.GlobalAveragePooling'),
     head=dict(
-        type='LinearClsHead',
+        type='mmpretrain.LinearClsHead',
         num_classes=1000,
         in_channels=2048,
-        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        loss=dict(type='mmpretrain.CrossEntropyLoss', loss_weight=1.0),
         topk=(1, 5),
     ))
