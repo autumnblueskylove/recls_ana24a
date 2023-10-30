@@ -19,11 +19,17 @@ class PreprocessMeta(BaseTransform):
                  include_longlat: bool = True,
                  include_date: bool = False,
                  include_gsd: bool = False,
+                 use_object_size: bool = False,
+                 use_xgsd: bool = False,
+                 object_norm=50.,
                  num_metas: int = 2):
         self.include_longlat = include_longlat
         self.include_date = include_date
         self.include_gsd = include_gsd
+        self.use_object_size = use_object_size
         self.num_metas = num_metas
+        self.use_xgsd = use_xgsd
+        self.object_norm = object_norm
 
     def transform(self, results):
         """Transform function to crop instance in an image.
@@ -43,20 +49,32 @@ class PreprocessMeta(BaseTransform):
 
             long, lat = longlat
 
-            lat = float(lat) / 90
-            long = float(long) / 180
+            long = float(long) / 90
+            lat = float(lat) / 180
             meta_infos = []
             if self.include_longlat:
                 meta_infos += [long, lat]
             if self.include_date:
                 meta_infos += [date]
             if self.include_gsd:
-                meta_infos += results.get('xy_gsd')
+                x, y = results.get('xy_gsd')
+                if self.use_object_size:
+                    coordinate = results['rbox']
+                    # print(x, y, x*coordinate[2], y*coordinate[2], coordinate)
+                    x = x * coordinate[2] / 50.
+                    if self.use_xgsd:
+                        y = x * coordinate[3] / self.object_norm
+                    else:
+                        y = y * coordinate[3] / self.object_norm
+                meta_infos += [x, y]
             meta_infos = np.array(meta_infos, dtype=np.float32)
             meta_infos = self.encode_sinusoidal(meta_infos)
         else:
             meta_infos = np.zeros(self.num_metas, float)
         results['meta_infos'] = meta_infos
+        # if self.include_gsd:
+        #     results['xy_gsd'] = results.get('xy_gsd')[0]
+        results['xy_gsd'] = results.get('xy_gsd')[0]
 
         return results
 

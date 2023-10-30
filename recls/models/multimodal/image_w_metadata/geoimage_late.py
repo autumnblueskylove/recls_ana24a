@@ -11,7 +11,7 @@ from recls.registry import MODELS
 
 
 @MODELS.register_module()
-class GeoImageClassifier(ImageClassifier):
+class GeoImageLateClassifier(ImageClassifier):
     """Image with Meta information classifiers for supervised classification
     task.
 
@@ -47,7 +47,6 @@ class GeoImageClassifier(ImageClassifier):
     def __init__(self,
                  *args,
                  meta_encoder: dict = None,
-                 fuser: dict = None,
                  use_gsd_in_backbone: bool = False,
                  **kwargs):
 
@@ -56,11 +55,8 @@ class GeoImageClassifier(ImageClassifier):
         if meta_encoder is not None and not isinstance(meta_encoder,
                                                        nn.Module):
             meta_encoder = MODELS.build(meta_encoder)
-        if fuser is not None and not isinstance(fuser, nn.Module):
-            fuser = MODELS.build(fuser)
 
         self.meta_encoder = meta_encoder
-        self.fuser = fuser
         self.use_gsd_in_backbone = use_gsd_in_backbone
 
     def forward(self,
@@ -107,7 +103,7 @@ class GeoImageClassifier(ImageClassifier):
     def extract_feat(self,
                      images: torch.Tensor,
                      data_samples: Optional[List[DataSample]],
-                     stage='fuse'):
+                     stage='late'):
         """Extract features from the input tensor with shape (N, C, ...).
 
         Args:
@@ -171,7 +167,7 @@ class GeoImageClassifier(ImageClassifier):
             >>> import torch
             >>> from mmengine import Config
             >>> from mmpretrain.models import build_classifier
-            >>>
+            >>
             >>> cfg = Config.fromfile('configs/vision_transformer/vit-base-p16_pt-64xb64_in1k-224.py').model
             >>> model = build_classifier(cfg)
             >>>
@@ -179,12 +175,13 @@ class GeoImageClassifier(ImageClassifier):
             >>> print(out.shape)  # The hidden dims in head is 3072
             torch.Size([1, 3072])
         """  # noqa: E501
-        assert stage in ['backbone', 'neck', 'fuse', 'pre_logits'], \
+        assert stage in ['backbone', 'neck', 'late', 'pre_logits'], \
             (f'Invalid output stage "{stage}", please choose from "backbone", '
              '"neck" and "pre_logits"')
 
         if self.use_gsd_in_backbone:
-            gsd = data_samples['xy_gsd'][0]
+            gsd = np.stack([1 / i.xy_gsd for i in data_samples])
+            gsd = torch.tensor(gsd, dtype=images.dtype, device=images.device)
 
             img_feats = self.backbone(images, gsd)
         else:
@@ -201,13 +198,14 @@ class GeoImageClassifier(ImageClassifier):
         if stage == 'neck':
             return img_feats
 
-        feats = self.fuser(img_feats, meta_feats)
-        if stage == 'fuse':
-            return feats
+        if stage == 'late':
+            assert len(img_feats) == 1, 'Only support one backbone output'
+            img_feats = [torch.cat([img_feats[0], meta_feats], dim=1)]
+            return img_feats
 
         assert self.with_head and hasattr(self.head, 'pre_logits'), \
             "No head or the head doesn't implement `pre_logits` method."
-        return self.head.pre_logits(feats)
+        return self.head.pre_logits(img_feats)
 
     def preprocess_meta(self, data_samples: List[DataSample],
                         device: torch.device) -> List[DataSample]:

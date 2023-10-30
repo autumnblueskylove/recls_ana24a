@@ -32,7 +32,6 @@ categories = [
     dict(id=23, name='UH-60'),
     dict(id=24, name='Y-8'),
     dict(id=25, name='Y-9'),
-
     dict(id=26, name='Unknown'),
     dict(id=26, name='MiG-29'),
     dict(id=26, name='RQ-4'),

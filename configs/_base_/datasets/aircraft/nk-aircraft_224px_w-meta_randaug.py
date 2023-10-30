@@ -103,7 +103,7 @@ train_pipeline = [
         fill_std=bgr_std),
     dict(
         type='mmpretrain.PackInputs',
-        meta_keys=['img_path', 'ilid', 'meta_infos']),
+        meta_keys=['img_path', 'ilid', 'meta_infos', 'xy_gsd']),
 ]
 
 test_pipeline = [
@@ -119,7 +119,7 @@ test_pipeline = [
     dict(type='mmpretrain.Resize', scale=(224, 224)),
     dict(
         type='mmpretrain.PackInputs',
-        meta_keys=['img_path', 'ilid', 'meta_infos']),
+        meta_keys=['img_path', 'ilid', 'meta_infos', 'xy_gsd']),
 ]
 
 train_dataloader = dict(
