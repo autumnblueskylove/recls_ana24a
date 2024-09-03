@@ -1,4 +1,4 @@
-__version__ = '1.0.0rc1'
+__version__ = '1.0.0rc1+ANA24'
 
 
 def parse_version_info(version_str):
