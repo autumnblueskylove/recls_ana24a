@@ -22,12 +22,14 @@ jobs:
     - name: update setuptools
       run: pip3 install setuptools --upgrade
     - name: install dependencies
-      run: pip3 install torch wheel
+      run: pip3 install torch==1.9.0 wheel
     - name: Build recls
       run: python3 setup.py sdist bdist_wheel
     - name: publish distribution to PyPI
       run: |
-        pip3 install twine
+        python3 -m venv myenv
+        source myenv/bin/activate
+        pip install twine importlib_metadata
         twine upload --repository-url ${{ secrets.PYPI_INDEX_URL }} dist/* -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PW }}
 
   check-consistency:
